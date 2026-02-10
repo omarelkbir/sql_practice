@@ -92,4 +92,3 @@ FROM sales
 GROUP BY category
 HAVING total_revenue > 2000 AND avg_sale_price >100
 ORDER BY total_revenue DESC;
-
