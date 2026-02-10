@@ -16,6 +16,18 @@ all rows will be updated.
 -if u want to delete everything from a table, use TRUNCATE TABLE persons instead of
 DELETE FROM persons, DELETE has a lot of stuff happening in the background, while 
 truncate skips all those extra steps and is way faster. 
--
+-Need to change something?
+    │
+    ├── Change TABLE STRUCTURE? (columns, types, defaults)
+    │       └── Use ALTER TABLE (DDL)
+    │           ├── Add column → ALTER TABLE ... ADD COLUMN
+    │           ├── Change type → ALTER TABLE ... MODIFY
+    │           └── Remove table → DROP TABLE
+    │
+    └── Change DATA VALUES? (rows, records)
+            └── Use UPDATE (DML)
+                ├── Change prices → UPDATE ... SET price = ...
+                ├── Fix names → UPDATE ... SET name = ...
+                └── Delete rows → DELETE FROM ...
 
 

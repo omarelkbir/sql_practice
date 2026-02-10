@@ -163,70 +163,253 @@ SET price = ROUND(price * 0.9, 2)
 WHERE price > 13.00;
 SELECT * FROM books WHERE price > 13.00;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+DELETE FROM customers
+WHERE signup_date = CURRENT_DATE;
+SELECT * FROM customers WHERE signup_date = CURRENT_DATE;
+
+ALTER TABLE books
+ADD genre VARCHAR(50);
+
+ALTER TABLE books
+MODIFY isbn VARCHAR(20) DEFAULT NULL,
+MODIFY price DECIMAL(10,2) DEFAULT 10.00;
+
+INSERT INTO books (title, genre) 
+VALUES 
+	('Fullmetal Alchemist', 'Fantasy'),
+	('Cyberpunk','Sci-Fi'),
+	('Gone Girl','Thriller'),
+	('A Thousand Splendid Suns','Historical'),
+	('Spy x Family','Comedy');
+
+UPDATE books SET genre = 'Sci-Fi' WHERE book_id = 2;
+UPDATE books SET genre = 'Fantasy' WHERE book_id = 3;
+UPDATE books SET genre = 'Adventure' WHERE book_id = 4;
+UPDATE books SET genre = 'Thriller' WHERE book_id = 5;
+
+SELECT genre, COUNT(*) AS 'count' FROM books
+GROUP BY genre
+ORDER BY genre DESC;
+
+INSERT INTO customers (first_name, email)
+VALUES 
+	('omar', 'omarelkbir@gmail.com');
+
+UPDATE books
+SET price = 30.00
+WHERE title = 'one piece';
+SELECT * FROM books WHERE title = 'one piece'; 
+    
+DELETE FROM books
+WHERE title = 'spy x family';
+
+SELECT * FROM books
+ORDER BY title
+LIMIT 3;
+
+CREATE TABLE menu_items (
+		item_id INT NOT NULL AUTO_INCREMENT,
+        item_name VARCHAR(100) NOT NULL,
+        category TEXT,
+        price DECIMAL(10,2) NOT NULL,
+        PRIMARY KEY (item_id)
+);
+SELECT * FROM menu_items;
+
+ALTER TABLE menu_items
+ADD calories INT; 
+
+ALTER TABLE menu_items
+MODIFY category TEXT NOT NULL;
+
+ALTER TABLE menu_items
+ADD is_available BOOLEAN DEFAULT TRUE;
+
+ALTER TABLE menu_items
+RENAME COLUMN is_available TO in_stock;
+
+CREATE TABLE daily_sales (
+	sale_id INT NOT NULL AUTO_INCREMENT,
+    item_name TEXT NOT NULL,
+    quantity_sold INT,
+    total_price DECIMAL(10,2) NOT NULL,
+    sale_date DATE,
+    PRIMARY KEY (sale_id)
+);
+    
+INSERT INTO menu_items(item_name, category, price, calories)
+VALUES 
+	('Espresso', 'beverage', 3.50, 10),
+    ('Latte', 'beverage', 4.50, 150),
+    ('Mocha', 'beverage', 5.00, 300),
+    ('Cold Brew', 'beverage', 4.00, 5);
+
+UPDATE menu_items
+SET calories = 350
+WHERE item_name = 'Mocha';
+
+UPDATE menu_items
+SET price = price + 0.50
+WHERE price > 4.00;
+
+
+SELECT item_name, MIN(calories)  FROM menu_items
+GROUP BY item_name;
+DELETE FROM menu_items
+WHERE item_name = 'cold brew'; 
+
+INSERT INTO menu_items(item_name, category, price, calories)
+VALUES 
+	('Croissant', 'Bakery', 3.00, 280),
+    ('Bagel', 'Bakery', 2.50, 250),
+    ('Muffin', 'Bakery', 3.50, 400);
+    
+SELECT * FROM menu_items
+WHERE category = 'Bakery'
+ORDER BY calories DESC;
+
+UPDATE menu_items
+SET price = (price * 8) / 10
+WHERE price > 4.00;
+
+ALTER TABLE menu_items
+ADD original_price DECIMAL(10,2) NOT NULL;
+
+UPDATE menu_items
+SET original_price = (price * 12) / 10; 
+
+SELECT * FROM menu_items
+WHERE category = 'Bakery' AND calories > 300;
+DELETE FROM menu_items
+WHERE category = 'Bakery' AND calories > 300;
+
+SELECT category,
+	COUNT(*) AS num_of_items,
+    AVG(price) AS avg_price
+FROM menu_items
+GROUP BY category
+HAVING num_of_items > 1
+ORDER BY avg_price DESC;
+
+CREATE TABLE staff (
+	staff_id INT NOT NULL AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    hire_date DATE,
+    hourly_wage DECIMAL(10,2),
+    PRIMARY KEY(staff_id)
+);
+INSERT INTO staff (first_name, last_name, hire_date, hourly_wage) 
+VALUES
+    ('Alice', 'Johnson', '2023-01-15', 25.50),
+    ('Bob', 'Smith', '2022-06-20', 22.00),
+    ('Carol', 'Davis', '2024-03-10', 28.75);
+
+ALTER TABLE staff
+ADD is_active BOOLEAN DEFAULT TRUE;
+
+UPDATE staff
+SET is_active = FALSE
+WHERE staff_id = 2;
+
+ALTER TABLE staff
+ADD phone VARCHAR(50);
+
+ALTER TABLE staff
+MODIFY phone VARCHAR(50) DEFAULT NULL;
+
+CREATE TABLE inventory (
+	product_id INT NOT NULL AUTO_INCREMENT,
+    product_name VARCHAR(50) NOT NULL,
+    quantity_in_stock INT,
+    reorder_level INT DEFAULT 10,
+    PRIMARY KEY(product_id)
+);
+SELECT * FROM inventory;
+
+INSERT INTO inventory (product_name, quantity_in_stock, reorder_level) VALUES
+    ('Laptop', 25, 10),
+    ('Mouse Test Version', 5, 10),
+    ('Keyboard', 8, 10),
+    ('Monitor', 12, 10),
+    ('USB Cable Test', 3, 10);
+
+UPDATE inventory 
+SET quantity_in_stock = 20
+WHERE quantity_in_stock < reorder_level;
+SELECT * FROM inventory;
+
+DELETE FROM inventory
+WHERE product_name LIKE '%Test%';
+SELECT * FROM inventory WHERE product_name LIKE '%Test%';
+
+SELECT product_name, quantity_in_stock, 'LOW STOCK' AS status
+FROM inventory
+WHERE quantity_in_stock <= 15;
+  
+SELECT product_name, quantity_in_stock, 'OK' AS status
+FROM inventory
+WHERE quantity_in_stock > 15;
+
+
+CREATE TABLE products (
+    product_id INT,
+    product_name VARCHAR(100),
+    price DECIMAL(10,2),
+    stock_quantity INT,
+    category VARCHAR(50),
+    date_added DATE
+);
+
+
+INSERT INTO products VALUES 
+(1, 'Pro Laptop 500', 999.99, 50, 'Electronics', '2024-01-15'),
+(2, 'Wireless Mouse', 25.00, 200, 'Electronics', '2024-02-10'),
+(3, 'Coffee Maker', 89.99, 30, 'Appliances', '2024-03-05'),
+(4, 'Novel: The Great Adventure', 15.00, 150, 'Books', '2024-01-20'),
+(5, 'Kids Toy Car', 12.50, 75, 'Toys', '2024-04-12'),
+(6, 'Pro Headphones', 199.99, 0, 'Electronics', '2024-02-28'),
+(7, 'T-Shirt Blue', 19.99, 120, 'Clothing', '2024-05-01'),
+(8, 'Budget Phone', 149.99, 45, 'Electronics', '2024-03-15'),
+(9, 'Cookbook', 25.00, 60, 'Books', '2024-06-10'),
+(10, 'Test_Product_A', 4.99, 5, 'Misc', '2024-01-01'),
+(11, 'Max Pro Tablet', 450.00, 25, 'Electronics', '2024-04-20'),
+(12, 'ABC', 8.00, 0, 'Misc', '2024-02-15'),
+(13, 'Winter Jacket', 120.00, 8, 'Clothing', '2023-12-01'),
+(14, 'Wireless Keyboard', 55.00, 90, 'Electronics', '2024-05-20'),
+(15, 'Puzzle Set', 18.00, 40, 'Toys', '2024-03-30'),
+(16, 'Test_B', 2.50, 0, 'Misc', '2024-01-10'),
+(17, 'Pro Monitor 500', 300.00, 15, 'Electronics', '2024-06-01'),
+(18, 'History Book', 22.00, 100, 'Books', '2024-02-05'),
+(19, 'Running Shoes', 85.00, 3, 'Clothing', '2024-05-15'),
+(20, 'Seasonal Ornament', 10.00, 500, 'Seasonal', '2023-11-15');
+
+SELECT * FROM products
+WHERE price = 25.00;
+
+SELECT * FROM products
+WHERE NOT category = 'electronics';
+
+SELECT * FROM products 
+WHERE stock_quantity > 100
+ORDER BY price;
+
+UPDATE products
+SET price = price * 1.10
+WHERE price > 50;
+SELECT * FROM products WHERE price > 50;
+
+SELECT * FROM products 
+WHERE category = 'electronics' AND price > 200 AND stock_quantity > 50;
+
+SELECT * FROM products 
+WHERE category = 'Books' OR price < 10.00
+ORDER BY price 
+LIMIT 5;
+
+SELECT * FROM products
+WHERE (NOT category = 'clothing') AND stock_quantity BETWEEN 10 AND 100;
+
+DELETE FROM products 
+WHERE price < 5.00 OR stock_quantity = 0;
 

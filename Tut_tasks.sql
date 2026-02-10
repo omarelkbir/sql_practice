@@ -104,7 +104,37 @@ SELECT * FROM customers WHERE id >5;
 DELETE FROM persons; #to delete everything in the table
 TRUNCATE TABLE persons; # it's faster than DELETE as it skips some extra steps that delete does.
 
+USE mydatabase;
 
+SELECT * FROM customers;
 
+SELECT * FROM customers
+WHERE country = 'germany';
 
+SELECT * FROM customers 
+WHERE country != 'germany';
+
+SELECT * FROM customers
+WHERE country = 'USA' AND score > 500;
+
+SELECT * FROM customers
+WHERE NOT score < 500;
+
+SELECT * FROM customers 
+WHERE score BETWEEN 100 AND 500;
+
+SELECT * FROM customers
+WHERE country IN ('Germany', 'USA');
+
+SELECT * FROM customers 
+WHERE first_name LIKE 'M%';
+
+SELECT * FROM customers
+WHERE first_name LIKE '%n';
+
+SELECT * FROM customers
+WHERE first_name LIKE '%r%';
+
+SELECT * FROM customers
+WHERE first_name LIKE '__r%';
 
