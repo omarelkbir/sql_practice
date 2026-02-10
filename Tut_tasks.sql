@@ -102,7 +102,8 @@ WHERE id > 5;
 SELECT * FROM customers WHERE id >5;
 
 DELETE FROM persons; #to delete everything in the table
-TRUNCATE TABLE persons; # it's faster then DELETE as it skips some extra steps that delete does.
+TRUNCATE TABLE persons; # it's faster than DELETE as it skips some extra steps that delete does.
+
 
 
 

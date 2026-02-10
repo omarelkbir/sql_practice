@@ -16,3 +16,6 @@ all rows will be updated.
 -if u want to delete everything from a table, use TRUNCATE TABLE persons instead of
 DELETE FROM persons, DELETE has a lot of stuff happening in the background, while 
 truncate skips all those extra steps and is way faster. 
+-
+
+
