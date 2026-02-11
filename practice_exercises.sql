@@ -413,3 +413,185 @@ WHERE (NOT category = 'clothing') AND stock_quantity BETWEEN 10 AND 100;
 DELETE FROM products 
 WHERE price < 5.00 OR stock_quantity = 0;
 
+SELECT * FROM products 
+WHERE price BETWEEN 20 AND 50 
+AND NOT (price = 30 OR price = 40);
+
+UPDATE products
+SET stock_quantity = 7 
+WHERE category = 'Electronics';
+
+ALTER TABLE products
+ADD status VARCHAR(20);
+
+UPDATE products 
+SET stock_quantity = 0,
+	status = 'out_of_stock'
+WHERE stock_quantity BETWEEN 1 AND 10;
+
+SELECT * FROM products;
+
+SELECT * FROM products
+WHERE date_added BETWEEN '2024-01-01' AND '2024-06-30' AND category != 'seasonal';
+
+SELECT * FROM products 
+WHERE category NOT IN ('Electronics', 'Books', 'Toys');
+
+DELETE FROM products
+WHERE product_id IN (10,12,16);
+SELECT * FROM products WHERE product_id IN (10,12,16);
+
+SELECT * FROM products
+WHERE product_name LIKE 'Pro%'; 
+
+SELECT * FROM products
+WHERE product_name LIKE '%max%'; 
+
+SELECT * FROM products
+WHERE product_name LIKE '___'; 
+
+SELECT * FROM products
+WHERE product_name LIKE '%500' AND NOT category = 'Electronics'; 
+
+UPDATE products
+SET price = price + 5
+WHERE product_name LIKE '%wireless%'; 
+
+DELETE FROM products
+WHERE product_name LIKE '___' 
+   OR (product_name LIKE 'Test\_%' ESCAPE '\\');
+   
+   
+SELECT category, COUNT(*) AS products_count FROM products
+WHERE stock_quantity > 0 AND price BETWEEN 10 AND 100
+GROUP BY category
+ORDER BY products_count DESC;
+
+
+
+-- Customers table
+CREATE TABLE customers1 (
+    customer_id INT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100),
+    city VARCHAR(50)
+);
+INSERT INTO customers1 VALUES
+(1, 'John', 'Smith', 'john@email.com', 'New York'),
+(2, 'Sarah', 'Johnson', 'sarah@email.com', 'Los Angeles'),
+(3, 'Mike', 'Brown', 'mike@email.com', 'Chicago'),
+(4, 'Emma', 'Davis', 'emma@email.com', 'New York'),
+(5, 'Chris', 'Wilson', 'chris@email.com', 'Miami'),
+(6, 'Lisa', 'Garcia', 'lisa@email.com', 'Chicago');
+-- Orders table (some customers have no orders, some orders have missing customers)
+CREATE TABLE orders1 (
+    order_id INT,
+    customer_id INT,
+    order_date DATE,
+    total_amount DECIMAL(10,2)
+);
+INSERT INTO orders1 VALUES
+(101, 1, '2024-01-15', 150.00),
+(102, 2, '2024-01-20', 89.50),
+(103, 1, '2024-02-05', 245.00),
+(104, 4, '2024-02-10', 55.00),
+(105, 2, '2024-03-01', 120.00),
+(106, 7, '2024-03-15', 300.00),  -- customer 7 doesn't exist!
+(107, 3, '2024-03-20', 75.00);
+-- Products table
+CREATE TABLE products1 (
+    product_id INT,
+    product_name VARCHAR(100),
+    category VARCHAR(50),
+    price DECIMAL(10,2)
+);
+INSERT INTO products1 VALUES
+(1, 'Laptop', 'Electronics', 999.00),
+(2, 'Headphones', 'Electronics', 199.00),
+(3, 'Coffee Maker', 'Appliances', 89.00),
+(4, 'Running Shoes', 'Clothing', 120.00),
+(5, 'Novel', 'Books', 15.00);
+-- Order_Items table (links orders to products)
+CREATE TABLE order_items1 (
+    item_id INT,
+    order_id INT,
+    product_id INT,
+    quantity INT
+);
+INSERT INTO order_items1 VALUES
+(1, 101, 1, 1),
+(2, 101, 2, 2),
+(3, 102, 5, 3),
+(4, 103, 3, 1),
+(5, 103, 4, 2),
+(6, 104, 5, 1),
+(7, 105, 2, 1),
+(8, 105, 3, 1),
+(9, 107, 4, 1),
+(10, 108, 1, 1);  -- order 108 doesn't exist!
+
+
+SELECT c.first_name, c.last_name, o.total_amount 
+FROM customers1 c
+INNER JOIN orders1 o 
+ON c.customer_id = o.customer_id;
+
+SELECT o.order_id, oi.quantity
+FROM orders1 o
+INNER JOIN order_items1 oi 
+ON o.order_id = oi.order_id;
+
+SELECT c.first_name, oi.quantity
+FROM customers1 c 
+INNER JOIN orders1 o ON c.customer_id = o.customer_id
+INNER JOIN order_items1 oi ON o.order_id = oi.order_id;
+
+SELECT c.first_name, o.total_amount FROM customers1 c
+LEFT JOIN orders1 o 
+ON c.customer_id = o.customer_id;
+
+SELECT * FROM customers1 c
+RIGHT JOIN orders1 o 
+ON c.customer_id = o.customer_id;
+
+SELECT * FROM orders1 o
+LEFT JOIN order_items1 oi 
+ON o.order_id = oi.order_id
+WHERE oi.item_id IS NULL;
+
+SELECT * FROM customers1 c
+LEFT JOIN orders1 o 
+ON c.customer_id = o.customer_id
+UNION 
+SELECT * FROM orders1 o
+LEFT JOIN customers1 c 
+ON c.customer_id = o.customer_id;
+
+SELECT * FROM customers1 c
+LEFT JOIN orders1 o 
+ON c.customer_id = o.customer_id
+WHERE o.customer_id IS NULL;
+
+SELECT * FROM customers1 c
+RIGHT JOIN orders1 o 
+ON o.customer_id = c.customer_id
+WHERE c.customer_id IS NULL;
+
+SELECT * FROM customers1 c
+LEFT JOIN orders1 o 
+ON c.customer_id = o.customer_id
+WHERE o.order_id IS NULL
+UNION 
+SELECT * FROM  customers1 c
+RIGHT JOIN orders1 o
+ON o.customer_id = c.customer_id
+WHERE c.customer_id IS NULL;
+
+SELECT c.first_name, p.product_name
+FROM customers1 c
+CROSS JOIN products1 p;
+
+
+
+

@@ -138,3 +138,77 @@ WHERE first_name LIKE '%r%';
 SELECT * FROM customers
 WHERE first_name LIKE '__r%';
 
+SELECT * FROM customers;
+SELECT * FROM orders;
+
+SELECT * FROM customers 
+INNER JOIN orders
+ON customers.id = orders.customer_id;
+
+SELECT c.id, c.first_name, o.order_id, o.sales
+FROM customers c
+INNER JOIN orders o
+ON c.id = o.customer_id;
+
+SELECT * FROM customers c
+LEFT JOIN orders o
+ON c.id = o.customer_id;
+
+SELECT * FROM customers c
+RIGHT JOIN orders o 
+ON c.id = o.customer_id;
+
+SELECT * FROM orders o
+LEFT JOIN customers c
+ON o.customer_id = c.id;
+
+SELECT * FROM customers c
+LEFT JOIN orders o 
+ON c.id = o.customer_id
+UNION
+SELECT * FROM orders o
+LEFT JOIN customers c
+ON c.id = o.customer_id;
+
+SELECT * FROM customers c
+LEFT JOIN orders o
+ON c.id = o.customer_id
+WHERE o.customer_id IS NULL;
+
+SELECT * FROM customers c
+RIGHT JOIN orders o  
+ON o.customer_id = c.id
+WHERE c.id IS NULL;
+
+SELECT * FROM orders o 
+LEFT JOIN customers c  
+ON o.customer_id = c.id
+WHERE c.id IS NULL;
+
+SELECT * FROM customers c
+LEFT JOIN orders o 
+ON c.id = o.customer_id
+WHERE o.customer_id IS NULL
+UNION
+SELECT * FROM orders o 
+LEFT JOIN customers c 
+ON c.id = o.customer_id
+WHERE c.id IS NULL;
+
+SELECT * FROM customers c 
+LEFT JOIN orders o 
+ON c.id = o.customer_id
+WHERE o.customer_id IS NOT NULL;
+
+SELECT * FROM customers c 
+CROSS JOIN orders o;
+#somehow figured out this also makes a cross join lol
+SELECT * FROM customers c, orders o;
+
+USE salesdb;
+
+SELECT o.orderid, c.firstname, p.product, p.price , o.sales, e.firstname AS 'saleperson'
+FROM orders o 
+LEFT JOIN customers c ON o.customerid = c.customerid
+INNER JOIN products p ON o.productid = p.productid
+INNER JOIN employees e ON o.salespersonid = e.employeeid;

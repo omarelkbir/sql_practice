@@ -30,4 +30,19 @@ truncate skips all those extra steps and is way faster.
                 ├── Fix names → UPDATE ... SET name = ...
                 └── Delete rows → DELETE FROM ...
 
-
+- INNER JOIN or just JOIN returns the matching data from both tables
+- LEFT JOIN returns all the rows from the left table and only the matching rows from the
+right table
+- RIGHT JOIN returns all the rows from the right table and only the matching rows from the
+left table
+- FULL JOIN or (LEFT JOIN UNION RIGHT JOIN) or (LEFT JOIN LEFT JOIN but switch the order)
+returns EVERYTHING, literally both tables, now for mysql there is no FULL JOIN syntax
+so we use the union method
+- LEFT ANTI JOIN return rows from the left table that has no match in the right table
+ the syntax for this is using a left join with a WHERE clause that says the B table's
+ id column (or the column we combined tables on) IS NULL. ex: WHERE b.id IS NULL;
+ - RIGHT ANTI JOIN same thing but switch it up ex: WHERE a.id IS NULL; basically, the
+ column u put in the where clause belongs to the table that is not the primary one
+ - FULL ANTI JOIN returns only rows that dont match in either table
+ - CROSS JOIN combines every row from the left with every row from the right, so u can 
+ essentially see every possible combination.
