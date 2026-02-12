@@ -592,6 +592,7 @@ SELECT c.first_name, p.product_name
 FROM customers1 c
 CROSS JOIN products1 p;
 
-
-
+SELECT * FROM customers1 c 
+CROSS JOIN customers1 c1
+WHERE c.customer_id != c1.customer_id;
 
