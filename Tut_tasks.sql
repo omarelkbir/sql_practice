@@ -212,3 +212,33 @@ FROM orders o
 LEFT JOIN customers c ON o.customerid = c.customerid
 INNER JOIN products p ON o.productid = p.productid
 INNER JOIN employees e ON o.salespersonid = e.employeeid;
+
+
+SELECT firstname, lastname FROM customers
+UNION
+SELECT firstname, lastname FROM employees;
+
+SELECT firstname, lastname FROM customers
+UNION ALL
+SELECT firstname, lastname FROM employees;
+
+SELECT firstname, lastname FROM employees
+EXCEPT
+SELECT firstname, lastname FROM customers;
+
+SELECT firstname, lastname FROM employees
+INTERSECT 
+SELECT firstname, lastname FROM customers;
+
+SELECT 'orders' AS type, orderid, productid, customerid, salespersonid, orderdate, shipdate, orderstatus,
+shipaddress, billaddress, quantity, sales, creationtime
+FROM orders
+UNION 
+SELECT 'archived', orderid, productid, customerid, salespersonid, orderdate, shipdate, orderstatus,
+shipaddress, billaddress, quantity, sales, creationtime
+FROM orders_archive;
+
+
+
+
+
