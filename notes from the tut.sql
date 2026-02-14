@@ -46,3 +46,17 @@ so we use the union method
  - FULL ANTI JOIN returns only rows that dont match in either table
  - CROSS JOIN combines every row from the left with every row from the right, so u can 
  essentially see every possible combination.
+ 
+- RULES OF SET OPERATORS
+#1 ORDER BY can be used only in the last query 
+#2 Same Number of Columns
+#3 Matching Data Types
+#4 Same Order of Columns
+#5 First Query Controls Aliases
+#6 Mapping Correct Columns
+
+- UNION : returns all rows from both table exclusing duplicates
+- UNION ALL : returns all rows from both table including duplicates
+- EXCEPT : return only distinct rows in first table with no matches from the second table
+- INTERSECT : returns common rows between 2 tables, with no duplicates
+only union all allows duplicates
