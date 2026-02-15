@@ -238,7 +238,47 @@ SELECT 'archived', orderid, productid, customerid, salespersonid, orderdate, shi
 shipaddress, billaddress, quantity, sales, creationtime
 FROM orders_archive;
 
+USE mydatabase;
+
+SELECT CONCAT(first_name, ' ',  country) AS name_and_country
+FROM customers;
+
+SELECT LOWER(first_name) FROM customers;
+SELECT UPPER(first_name) FROM customers;
+
+SELECT first_name FROM customers
+WHERE TRIM(first_name) != first_name;
+-- to confirm
+SELECT LENGTH(first_name) FROM customers
+WHERE first_name LIKE '%john%';
+-- THIS IS FROM THE TUT
+SELECT first_name,
+	LENGTH(first_name) AS len_name,
+	LENGTH(TRIM(first_name)) AS len_trim_name,
+    LENGTH(first_name) - LENGTH(TRIM(first_name)) AS flag
+FROM customers;
+-- WHERE LENGTH(first_name) != LENGTH(TRIM(first_name)); quick filter to only see the flagged ones
+-- quickest one SELECT first_name FROM customers WHERE LENGTH(first_name) != LENGTH(TRIM(first_name));
 
 
+SELECT '123-456-789',
+REPLACE ('123-456-789', '-', '');
+-- u specify the value, something to replace inside it, then whatever the replacement is
+-- in my case replacing it with nothing/blankso it's '123456789'
 
+-- Replace File Extence from txt to csv
+SELECT 
+    'report.txt' AS old_filename,
+    REPLACE('report.txt', '.txt', '.csv') AS new_filename;
+    
+SELECT 
+    first_name, LENGTH(first_name)
+FROM
+    customers;
+    
+SELECT first_name, LEFT(TRIM(first_name), 2) FROM customers;# first 2 characters
+SELECT first_name, RIGHT(TRIM(first_name), 2) FROM customers;# last 2 characters
 
+SELECT first_name, 
+	SUBSTRING(TRIM(first_name), 2, LENGTH(first_name))
+FROM customers;
