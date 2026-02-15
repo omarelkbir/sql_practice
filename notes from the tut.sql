@@ -60,3 +60,14 @@ so we use the union method
 - EXCEPT : return only distinct rows in first table with no matches from the second table
 - INTERSECT : returns common rows between 2 tables, with no duplicates
 only union all allows duplicates
+
+- TRIM() function removes all leading and trailing white space
+
+-keywords that are not fully compatible with mysql that i should for a more mysql 
+replacement for: except, length, intersect, 
+
+-LEFT(value, number_of_characters) for example: LEFT('maria', 2) is 'ma', first 2 chars
+-RIGHT(value, number_of_characters) for example: RIGHT('maria', 2) is 'ia', last 2 chars
+- SUBSTRING OR MID, SUBSTRING(value, start, length) for example: 
+SUBSTRING('maria', 3, 2) is 'ri', a portion specified by a start and a length of the portion
+they also use SUBSTRING('maria', 3, length(firt_name)) to retrieve whatever remains
