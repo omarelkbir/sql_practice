@@ -596,3 +596,157 @@ SELECT * FROM customers1 c
 CROSS JOIN customers1 c1
 WHERE c.customer_id != c1.customer_id;
 
+
+
+-- Table A: Online customers
+CREATE TABLE online_customers (
+    customer_id INT,
+    name VARCHAR(50),
+    email VARCHAR(100),
+    city VARCHAR(50)
+);
+
+INSERT INTO online_customers VALUES
+(1, 'Alice', 'alice@email.com', 'New York'),
+(2, 'Bob', 'bob@email.com', 'Los Angeles'),
+(3, 'Charlie', 'charlie@email.com', 'Chicago'),
+(4, 'Diana', 'diana@email.com', 'New York'),
+(5, 'Eve', 'eve@email.com', 'Miami');
+
+-- Table B: In-store customers
+CREATE TABLE store_customers (
+    customer_id INT,
+    name VARCHAR(50),
+    email VARCHAR(100),
+    city VARCHAR(50)
+);
+
+INSERT INTO store_customers VALUES
+(3, 'Charlie', 'charlie@email.com', 'Chicago'),  -- duplicate
+(6, 'Frank', 'frank@email.com', 'Los Angeles'),
+(7, 'Grace', 'grace@email.com', 'New York'),
+(8, 'Henry', 'henry@email.com', 'Chicago'),
+(1, 'Alice', 'alice@email.com', 'New York');  -- duplicate
+
+-- Table C: Premium members
+CREATE TABLE premium_members (
+    customer_id INT,
+    name VARCHAR(50),
+    email VARCHAR(100)
+);
+
+INSERT INTO premium_members VALUES
+(1, 'Alice', 'alice@email.com'),
+(2, 'Bob', 'bob@email.com'),
+(9, 'Ivy', 'ivy@email.com');
+
+-- Table D: 2023 orders
+CREATE TABLE orders_2023 (
+    order_id INT,
+    customer_name VARCHAR(50),
+    amount DECIMAL(10,2)
+);
+
+INSERT INTO orders_2023 VALUES
+(101, 'Alice', 150.00),
+(102, 'Bob', 200.00),
+(103, 'Charlie', 75.00);
+
+-- Table E: 2024 orders
+CREATE TABLE orders_2024 (
+    order_id INT,
+    customer_name VARCHAR(50),
+    amount DECIMAL(10,2)
+);
+
+INSERT INTO orders_2024 VALUES
+(201, 'Alice', 300.00),
+(202, 'Diana', 125.00),
+(203, 'Frank', 450.00);
+
+DESCRIBE online_customers;
+-- or
+DESC online_customers;
+
+-- learned this to quickly get column names without the need to manually typing
+-- them in every set operator query.
+SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION) 
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_SCHEMA = 'practice_db' 
+  AND TABLE_NAME = 'online_customers';
+
+
+SELECT customer_id, name, email, city 
+FROM online_customers
+UNION 
+SELECT customer_id, name, email, city
+FROM store_customers;
+
+SELECT customer_id, name, email, city 
+FROM online_customers
+UNION ALL
+SELECT customer_id, name, email, city
+FROM store_customers;
+
+SELECT customer_id, name, email, city 
+FROM online_customers
+WHERE city IN('New york', 'Chicago')
+UNION 
+SELECT customer_id, name, email, city
+FROM store_customers
+WHERE city IN('New york', 'Chicago')
+ORDER BY city, name;
+
+SELECT 'online' AS type, email FROM online_customers
+WHERE city = 'New york'
+UNION ALL
+SELECT 'store', email FROM store_customers
+WHERE city = 'los angeles';
+
+SELECT email FROM online_customers
+UNION 
+SELECT email FROM store_customers;
+
+SELECT name FROM online_customers
+EXCEPT 
+SELECT name FROM store_customers;
+
+SELECT name FROM store_customers
+EXCEPT 
+SELECT name FROM online_customers;
+
+SELECT city FROM store_customers
+EXCEPT 
+SELECT city FROM online_customers;
+
+SELECT name FROM orders_2023
+EXCEPT 
+SELECT name FROM orders_2024;
+
+SELECT name FROM online_customers
+EXCEPT 
+SELECT name FROM premium_members;
+
+SELECT name FROM online_customers
+INTERSECT 
+SELECT name FROM store_customers;
+
+SELECT city FROM online_customers
+INTERSECT 
+SELECT city FROM store_customers;
+
+SELECT customer_name FROM orders_2023
+INTERSECT 
+SELECT customer_name FROM orders_2024;
+
+SELECT name FROM online_customers
+INTERSECT 
+SELECT name FROM premium_members;
+
+(SELECT name FROM online_customers
+EXCEPT
+SELECT name FROM store_customers)
+UNION ALL
+(SELECT name FROM store_customers
+EXCEPT
+SELECT name FROM online_customers);
