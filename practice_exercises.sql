@@ -750,3 +750,41 @@ UNION ALL
 (SELECT name FROM store_customers
 EXCEPT
 SELECT name FROM online_customers);
+
+CREATE DATABASE practice;
+USE practice;
+
+CREATE TABLE customers (
+    customer_id INT,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    city VARCHAR(50),
+    membership_level VARCHAR(20)
+);
+
+INSERT INTO customers VALUES
+(1, '  john  ', 'smith', 'JOHN.SMITH@EMAIL.COM', '555-123-4567', 'new york', 'GOLD'),
+(2, 'SARAH', 'jones', 'sarah.jones@Email.com', '5559876543', '  Los Angeles  ', 'SILVER'),
+(3, 'Mike', 'BROWN', 'mike.brown@test.com', '555-456-7890', 'chicago', 'BRONZE'),
+(4, '  emily  ', '  davis  ', 'Emily.Davis@EMAIL.COM', '5551112222', 'New York', 'GOLD'),
+(5, 'Chris', 'WILSON', 'chris@email', '5553334444', 'miami', 'SILVER'),
+(6, 'Lisa', 'Anderson', 'LISA.ANDERSON@COMPANY.COM', '5557778888', '  CHICAGO  ', 'GOLD');
+
+CREATE TABLE products (
+    product_id INT,
+    product_name VARCHAR(100),
+    category VARCHAR(50),
+    price DECIMAL(10,2),
+    sku_code VARCHAR(20)
+);
+
+INSERT INTO products VALUES
+(1, 'Wireless Mouse', 'Electronics', 29.99, 'ELEC-001-WM'),
+(2, 'USB-C Cable', 'Electronics', 15.50, 'ELEC-002-CBL'),
+(3, 'Mechanical Keyboard', 'Electronics', 89.99, 'ELEC-003-KB'),
+(4, 'Running Shoes', 'Clothing', 120.00, 'CLTH-004-SHOE'),
+(5, 'Coffee Maker', 'Appliances', 79.99, 'APPL-005-CF'),
+(6, 'Yoga Mat', 'Fitness', 35.00, 'FIT-006-YG');
+

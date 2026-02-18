@@ -282,3 +282,4 @@ SELECT first_name, RIGHT(TRIM(first_name), 2) FROM customers;# last 2 characters
 SELECT first_name, 
 	SUBSTRING(TRIM(first_name), 2, LENGTH(first_name))
 FROM customers;
+
