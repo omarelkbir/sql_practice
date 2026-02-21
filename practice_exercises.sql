@@ -788,3 +788,28 @@ INSERT INTO products VALUES
 (5, 'Coffee Maker', 'Appliances', 79.99, 'APPL-005-CF'),
 (6, 'Yoga Mat', 'Fitness', 35.00, 'FIT-006-YG');
 
+SELECT first_name, last_name, CONCAT(first_name, ' ', last_name) AS full_name FROM customers;
+
+SELECT LOWER(email), UPPER(email) FROM customers;
+
+SELECT CONCAT(
+	LEFT(UPPER(TRIM(first_name)), 1),
+    SUBSTRING(LOWER(TRIM(first_name)), 2))
+    AS clean_name
+FROM customers;
+
+SELECT CONCAT (' Product: ', product_name, ' - Category: ', category) FROM products;
+	
+SELECT LEFT(last_name, 4), RIGHT(phone, 4) FROM customers;
+
+SELECT SUBSTRING(sku_code, 6, 3) FROM products;
+-- we start from position 6 and show 3 characters from there, so pos 6,7 and 8
+
+SELECT CONCAT('xxx-xxx-', RIGHT(TRIM(phone), 4)) AS masked_phone FROM customers;
+
+-- had to get help with this one, could not find that '@'. i just didnt learn the
+-- position keyword yet.
+SELECT 
+    SUBSTRING(email, POSITION('@' IN email) + 1) AS domain
+FROM customers;
+
