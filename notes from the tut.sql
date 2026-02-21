@@ -35,7 +35,7 @@ truncate skips all those extra steps and is way faster.
 right table
 - RIGHT JOIN returns all the rows from the right table and only the matching rows from the
 left table
-- FULL JOIN or (LEFT JOIN UNION RIGHT JOIN) or (LEFT JOIN LEFT JOIN but switch the order)
+- FULL JOIN or (LEFT JOIN UNION RIGHT JOIN) or (LEFT JOIN UNION LEFT JOIN but switch the order)
 returns EVERYTHING, literally both tables, now for mysql there is no FULL JOIN syntax
 so we use the union method
 - LEFT ANTI JOIN return rows from the left table that has no match in the right table
@@ -70,4 +70,7 @@ replacement for: except, length, intersect,
 -RIGHT(value, number_of_characters) for example: RIGHT('maria', 2) is 'ia', last 2 chars
 - SUBSTRING OR MID, SUBSTRING(value, start, length) for example: 
 SUBSTRING('maria', 3, 2) is 'ri', a portion specified by a start and a length of the portion
-they also use SUBSTRING('maria', 3, length(firt_name)) to retrieve whatever remains
+they also use SUBSTRING('maria', 3, length(firt_name)) to retrieve whatever remains,
+even if there is only 3 chars left after the start, it will work fine even if u did 20 not 3
+
+-
