@@ -813,3 +813,34 @@ SELECT
     SUBSTRING(email, POSITION('@' IN email) + 1) AS domain
 FROM customers;
 
+SELECT REPLACE(product_name, ' ', '-'), REPLACE(category, 'Electronics', 'TECH')
+FROM products;
+
+SELECT product_name, REVERSE(product_name) FROM products;
+
+SELECT MAX(LENGTH(email)), MIN(length(email)) FROM customers;
+
+SELECT membership_level AS original, 
+	REPLACE(REPLACE(REPLACE(membership_level, 'GOLD', 'PREMIUM'), 'SILVER', 'STANDARD'),
+    'BRONZE', 'BASIC') AS display_only
+FROM customers;
+
+SELECT CONCAT(
+	LEFT(UPPER(TRIM(last_name)), 3),
+    RIGHT(REPLACE(phone, '-', ''), 4)) AS customer_code
+FROM customers;
+
+SELECT CONCAT(
+	CONCAT(
+	LEFT(UPPER(TRIM(first_name)), 1), 
+    SUBSTRING(LOWER(TRIM(first_name)), 2, LENGTH(last_name))), ' ',
+    LOWER(TRIM(last_name))) AS clean_full_name, 
+    REPLACE(LOWER(email), ' ', '') AS clean_email,
+    CONCAT(
+	LEFT(UPPER(TRIM(city)), 1),
+    SUBSTRING(LOWER(TRIM(city)), 2, LENGTH(city))) AS clean_city,
+    CONCAT('[' , membership_level, ']') AS clean_membership 
+FROM customers;
+    
+
+    
