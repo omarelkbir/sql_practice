@@ -73,4 +73,17 @@ SUBSTRING('maria', 3, 2) is 'ri', a portion specified by a start and a length of
 they also use SUBSTRING('maria', 3, length(firt_name)) to retrieve whatever remains,
 even if there is only 3 chars left after the start, it will work fine even if u did 20 not 3
 
--
+-| Task                      | Functions/Syntax                                            |
+| :------------------------ | :---------------------------------------------------------- |
+| Get current datetime      | `NOW()`                                                     |
+| Get today                 | `CURDATE()`                                                 |
+| Get time now              | `CURTIME()`                                                 |
+| Extract year/month/day    | `YEAR()`, `MONTH()`, `DAY()`                                |
+| Format for display        | `DATE_FORMAT(date, '%Y-%m-%d')`                             |
+| Parse string to date      | `STR_TO_DATE('15-03-2024', '%d-%m-%Y')`                     |
+| Add days                  | `DATE_ADD(date, INTERVAL 5 DAY)` or `date + INTERVAL 5 DAY` |
+| Subtract months           | `DATE_SUB(date, INTERVAL 3 MONTH)`                          |
+| Days between dates        | `DATEDIFF(end_date, start_date)`                            |
+| Years/months between      | `TIMESTAMPDIFF(YEAR, start, end)`                           |
+| Last day of month         | `LAST_DAY(date)`                                            |
+| Remove time from datetime | `DATE(datetime)`                                            |
