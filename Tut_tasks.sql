@@ -283,3 +283,18 @@ SELECT first_name,
 	SUBSTRING(TRIM(first_name), 2, LENGTH(first_name))
 FROM customers;
 
+SELECT DAY(NOW()) AS day;
+
+SELECT YEAR(orderdate), COUNT(*) orders_count
+FROM orders
+GROUP BY YEAR(orderdate);
+
+SELECT DATE_FORMAT(orderdate, '%M') month, COUNT(*) orders_count
+FROM orders
+GROUP BY DATE_FORMAT(orderdate, '%M');
+
+SELECT * FROM orders
+WHERE MONTH(orderdate) = 2;
+
+
+
