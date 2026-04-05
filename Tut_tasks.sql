@@ -296,5 +296,29 @@ GROUP BY DATE_FORMAT(orderdate, '%M');
 SELECT * FROM orders
 WHERE MONTH(orderdate) = 2;
 
+SELECT YEAR(orderdate), COUNT(*)
+FROM orders
+GROUP BY YEAR(orderdate);
+
+SELECT DATE_FORMAT(orderdate, '%M') month, COUNT(*) order_count
+FROM orders
+GROUP BY DATE_FORMAT(orderdate, '%M');
+
+SELECT DATE_FORMAT(orderdate, '%M') month, COUNT(*) order_count
+FROM orders
+GROUP BY DATE_FORMAT(orderdate, '%M')
+HAVING month ='February';#search/filtering using strings not integers in not recommended
+
+#this is better practice: 
+
+SELECT MONTH(orderdate) month, COUNT(*) order_count
+FROM orders
+WHERE MONTH(orderdate) = 2
+GROUP BY month;
+
+
+
+
+
 
 

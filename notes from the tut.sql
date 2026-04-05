@@ -93,3 +93,7 @@ even if there is only 3 chars left after the start, it will work fine even if u 
 the HAVING clause but only in MYSQL, in other dbms u have to write the whole function
 time and time again, so it's best practice to just avoid using aliases in having too
 to get used to it in case i pick up other dbms alongside mysql.
+
+- dont use a date name like a month name or day of the week etc to search and filter 
+data, use integers instead as it's way faster. for example u want to know how many orders
+were in 'February', dont do WHERE month = 'February', search/filter using integers.
