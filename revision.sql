@@ -64,11 +64,35 @@ GROUP BY department
 HAVING AVG(salary) > 60000 AND COUNT(*) >= 2 AND MAX(performance_score) >= 90
 ORDER BY AVG(salary) DESC;
 
+SELECT city, department, COUNT(*) emp_count, AVG(performance_score) avg_performance
+FROM employees
+WHERE city != 'Chicago'
+GROUP BY city, department
+HAVING emp_count > 1 AND avg_performance > 85 
+ORDER BY emp_count DESC, avg_performance DESC
+LIMIT 3;
 
+SELECT YEAR(hire_date) hire_year, department,
+SUM(salary) total_salary,
+COUNT(*) emp_count
+FROM employees
+WHERE hire_date >= '2021-01-01' AND hire_date <= '2022-12-31'
+GROUP BY YEAR(hire_date), department
+HAVING total_salary > 50000
+ORDER BY total_salary DESC
+LIMIT 3;
 
+SELECT * FROM revision_db.sales;
+SELECT SUM(amount * quantity) total_revenue,
+AVG(amount) avg_amount,
+COUNT(*) transactions,
+SUM(quantity) total_quantity
+FROM sales
+GROUP BY category
+HAVING total_revenue > 2000 AND avg_amount > 100
+ORDER BY total_revenue DESC;
 
-
-
+SELECT * FROM revision_db.employees;
 
 
 
