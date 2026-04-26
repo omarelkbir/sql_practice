@@ -97,3 +97,28 @@ to get used to it in case i pick up other dbms alongside mysql.
 - dont use a date name like a month name or day of the week etc to search and filter 
 data, use integers instead as it's way faster. for example u want to know how many orders
 were in 'February', dont do WHERE month = 'February', search/filter using integers.
+
+-concat can basically have unlimited arguments u can add, like this: 
+-- Two arguments
+SELECT CONCAT('Hello', ' World');  -- Hello World
+-- Five arguments  
+SELECT CONCAT('A', 'B', 'C', 'D', 'E');  -- ABCDE
+-- Many arguments 
+SELECT CONCAT(
+  'Day ',
+  'Wed ',
+  'Jan ',
+  'Q1 ',
+  '2025 ',
+  '21:43:56 ',
+  'PM');
+i also learned u can use CONCAT_WS (concat with seperator) if u want to add many 
+arguments and they all have the same seperator, for example :
+-- Instead of adding spaces manually:
+SELECT CONCAT(first_name, ' ', last_name, ' ', email);  
+-- Use CONCAT_WS:
+SELECT CONCAT_WS(' ', first_name, last_name, email); 
+but if u have any null value in the concat arguments, the whole result will be null
+so be careful or just use coalesque alongside concat to handle potential nulls.
+
+

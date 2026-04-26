@@ -316,7 +316,8 @@ FROM orders
 WHERE MONTH(orderdate) = 2
 GROUP BY month;
 
-
+SELECT DATE_FORMAT(orderdate, 'day %a %b %Y %H:%i:%s %p') date_format
+FROM orders;
 
 
 
