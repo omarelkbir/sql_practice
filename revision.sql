@@ -93,8 +93,57 @@ HAVING total_revenue > 2000 AND avg_amount > 100
 ORDER BY total_revenue DESC;
 
 SELECT * FROM revision_db.employees;
+SELECT * FROM revision_db.sales;
 
+ALTER TABLE employees
+ADD email VARCHAR(100);
 
+UPDATE employees
+SET email = CONCAT(LOWER(SUBSTRING(full_name, 1, 3)), emp_id, '@company.com');
 
+SELECT sale_id, product_name, category, amount, quantity FROM sales
+WHERE category = 'Furniture' AND amount < 200 AND quantity < 3;
 
+DELETE FROM sales
+WHERE category = 'Furniture' AND amount < 200 AND quantity < 3;
 
+SELECT * FROM employees 
+WHERE department IN ('Engineering', 'Sales') 
+AND salary BETWEEN 60000 AND 90000
+AND performance_score >= 80
+AND city != 'Chicago'
+ORDER BY salary DESC, performance_score
+LIMIT 5;
+
+SELECT full_name, department FROM employees
+WHERE length(full_name) - length(replace(full_name, ' ', '')) = 1;
+
+SELECT 
+	department,
+    COUNT(emp_id),
+    ROUND(AVG(salary), 2) avg_salary,
+    MAX(performance_score)
+FROM employees
+GROUP BY department
+HAVING COUNT(emp_id) >= 3 AND ROUND(AVG(salary)) > 65000
+ORDER BY avg_salary DESC;
+
+SELECT 
+	category,
+    SUM(amount) total_revenue,
+    SUM(quantity) total_quantity,
+    ROUND(AVG(amount)) avg_amount
+FROM sales
+GROUP BY category
+ORDER BY total_revenue DESC;
+
+SELECT 
+	e.full_name,
+    s.product_name,
+    s.amount,
+    s.region
+FROM employees e
+INNER JOIN sales s
+	ON e.emp_id = s.salesperson_id
+WHERE s.amount > 100
+ORDER BY e.full_name;

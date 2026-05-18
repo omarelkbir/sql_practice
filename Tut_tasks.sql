@@ -307,7 +307,7 @@ GROUP BY DATE_FORMAT(orderdate, '%M');
 SELECT DATE_FORMAT(orderdate, '%M') month, COUNT(*) order_count
 FROM orders
 GROUP BY DATE_FORMAT(orderdate, '%M')
-HAVING month ='February';#search/filtering using strings not integers in not recommended
+HAVING month ='February';#search/filtering using strings not integers is not recommended
 
 #this is better practice: 
 
@@ -319,7 +319,7 @@ GROUP BY month;
 SELECT DATE_FORMAT(orderdate, 'day %a %b %Y %H:%i:%s %p') date_format
 FROM orders;
 
-
+6 hour 11 min tut video 
 
 
 
