@@ -319,7 +319,13 @@ GROUP BY month;
 SELECT DATE_FORMAT(orderdate, 'day %a %b %Y %H:%i:%s %p') date_format
 FROM orders;
 
-6 hour 11 min tut video 
+SELECT * FROM salesdb.employees;
 
+SELECT TIMESTAMPDIFF(YEAR, birthdate, CURDATE()) AS emp_age
+FROM employees; 
+#TIMESTAMPDIFF(unit, start_date, end_date)
+--              ↑      ↑           ↑
+--           YEAR   birthdate   CURDATE()
+#It calculates: end_date - start_date
 
 
