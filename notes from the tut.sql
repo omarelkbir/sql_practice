@@ -121,4 +121,8 @@ SELECT CONCAT_WS(' ', first_name, last_name, email);
 but if u have any null value in the concat arguments, the whole result will be null
 so be careful or just use coalesque alongside concat to handle potential nulls.
 
+#TIMESTAMPDIFF(unit, start_date, end_date)
+--              ↑      ↑           ↑
+--           YEAR   birthdate   CURDATE()
+#It calculates: end_date - start_date
 
