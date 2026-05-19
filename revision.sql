@@ -147,3 +147,96 @@ INNER JOIN sales s
 	ON e.emp_id = s.salesperson_id
 WHERE s.amount > 100
 ORDER BY e.full_name;
+
+SELECT e.full_name, SUM(s.amount)
+FROM employees e
+LEFT JOIN sales s
+	ON e.emp_id = s.salesperson_id
+GROUP BY e.full_name;
+
+SELECT
+	m.full_name AS manager_name,
+    m.department AS manager_department
+FROM employees e
+JOIN employees m
+	ON e.manager_id = m.emp_id
+ORDER BY m.full_name;
+
+SELECT 
+	full_name,
+    CONCAT(LOWER(LEFT(full_name, 3)), emp_id, LOWER(RIGHT(full_name, 2))) AS username
+FROM employees;
+
+SELECT 
+	full_name,
+    CONCAT(ROUND(salary / 1000) , 'k') AS my_salary
+FROM employees;
+
+
+SELECT 
+	REPLACE(product_name, ' ', '_') AS modified_product_name,
+    CONCAT(UPPER(category), '-', REPLACE(product_name, ' ', '_')) AS modified_category
+FROM sales;
+
+SELECT full_name, city, 'High Earner' AS status
+FROM employees
+WHERE city = 'New York' AND salary > 70000
+UNION ALL
+SELECT full_name, city, 'Top Performers' AS status
+FROM employees
+WHERE city = 'San Francisco' AND performance_score > 85;
+
+SELECT 
+    product_name,
+    amount AS original_amount,
+    ROUND(amount * 0.15, 2) AS bonus_amount
+FROM sales;
+SELECT 
+	category, 
+	ROUND(AVG(amount * 0.15), 2) AS avg_bonus
+FROM sales
+GROUP BY category;
+
+SELECT salesperson_id 
+FROM sales
+WHERE region = 'North'
+INTERSECT
+SELECT salesperson_id 
+FROM sales
+WHERE region = 'South';
+
+SELECT 
+	CONCAT(UPPER(LEFT(full_name, 1)), SUBSTRING(full_name, 2)) AS cfull_name,
+    CONCAT(UPPER(LEFT(department, 1)), SUBSTRING(full_name, 2)) AS cdepartment,
+    salary,
+    'Senior' AS tier
+FROM employees
+WHERE salary >= 80000
+UNION ALL
+SELECT
+	CONCAT(UPPER(LEFT(full_name, 1)), SUBSTRING(full_name, 2)), 
+    CONCAT(UPPER(LEFT(department, 1)), SUBSTRING(full_name, 2)),
+    salary,
+    'Mid' AS tier
+FROM employees
+WHERE salary BETWEEN 60000 AND 79000
+UNION ALL 
+SELECT
+	CONCAT(UPPER(LEFT(full_name, 1)), SUBSTRING(full_name, 2)),
+	CONCAT(UPPER(LEFT(department, 1)), SUBSTRING(full_name, 2)),
+	salary,
+	'Junior' AS tier
+FROM employees
+WHERE salary < 60000; 
+
+SELECT  
+	e.full_name,
+    COUNT(s.sale_id) sale_count,
+    CONCAT('$',ROUND(SUM(s.amount),0)) revenue_generated
+FROM employees e
+LEFT JOIN sales s
+	ON e.emp_id = s.salesperson_id
+WHERE s.category = 'Electronics'
+GROUP BY e.emp_id, e.full_name
+ORDER BY SUM(s.amount) DESC;
+
