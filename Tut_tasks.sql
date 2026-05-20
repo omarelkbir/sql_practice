@@ -328,4 +328,28 @@ FROM employees;
 --           YEAR   birthdate   CURDATE()
 #It calculates: end_date - start_date
 
+SELECT 
+	DATE_FORMAT(orderdate, '%M') month,
+	CONCAT(ROUND(AVG(DATEDIFF(shipdate, orderdate))), ' Days') avg_delivery_time
+FROM orders
+GROUP BY DATE_FORMAT(orderdate, '%M');
 
+USE mydatabase;
+
+SELECT AVG(score)
+FROM customers;
+
+SELECT 
+	firstname,
+    lastname,
+	CONCAT(IFNULL(firstname, lastname), ' ', IFNULL(lastname, '')) AS full_name,
+    IFNULL(score, 0) + 10 AS updated_score
+FROM customers;
+# using this 2nd option here dont work, '+' is purely for math operations, it doesnt
+# support string concats, so to merge strings together just use CONCAT() function
+SELECT 
+	firstname,
+    lastname, 
+	firstname + ' ' + lastname AS full_name,
+    score
+FROM customers; # doesnt work, it returns zero's and nulls in the full_name column

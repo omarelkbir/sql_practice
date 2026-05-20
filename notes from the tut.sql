@@ -126,3 +126,16 @@ so be careful or just use coalesque alongside concat to handle potential nulls.
 --           YEAR   birthdate   CURDATE()
 #It calculates: end_date - start_date
 
+COUNT(*)	Counts ALL rows, including NULLs
+COUNT(column)	Counts only non-NULL values in that column
+SUM(column)	Ignores NULLs (treats as 0 effectively)
+AVG(column)	Ignores NULLs in count AND sum
+MAX(column)	Ignores NULLs
+MIN(column)	Ignores NULLs
+
+-- Average salary (ignores NULL salaries if any)
+SELECT AVG(salary) FROM employees;
+-- Average with IFNULL (treats NULL as 0, lowering average)
+SELECT AVG(IFNULL(salary, 0)) FROM employees;
+
+
