@@ -138,4 +138,12 @@ SELECT AVG(salary) FROM employees;
 -- Average with IFNULL (treats NULL as 0, lowering average)
 SELECT AVG(IFNULL(salary, 0)) FROM employees;
 
+#CASE is an expression that returns a single value.
+#It can go anywhere a single value is expected:
+#SELECT, WHERE, ORDER BY, GROUP BY, HAVING, or inside functions.
+#You cannot put CASE as a standalone clause (like SELECT ... CASE ... FROM —
+#it must be inside SELECT, not between SELECT and FROM).
 
+#there is simple CASE and searched CASE, simple when u want to compare equality
+# using '=' sign, and searched when more complex, like '< > <= >= AND OR etc'
+# in the simple CASE u can do CASE column_name WHEN value THEN  value. like example above
