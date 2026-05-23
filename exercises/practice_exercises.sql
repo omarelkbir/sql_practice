@@ -1222,4 +1222,6 @@ ORDER BY salary + IFNULL(bonus,0) +
 			WHEN department = 'Sales' OR performance_score >= 90 THEN salary * 0.05
 			ELSE salary
 		END DESC;
-			
+# i calculated total_compensation 5 times during this exercise, which is redicilous,
+# apparently it can be way cleaner and efficient with subqueries so i only have to 
+# write total compensation once as a subquery then just use it whenever i need.
