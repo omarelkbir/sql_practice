@@ -1059,7 +1059,167 @@ SELECT
 	END priority_flag
 FROM sales;
 
+SELECT 
+	full_name,
+    manager_id,
+    CASE 
+		WHEN manager_id IS NULL THEN 'C-Level Executive'
+		WHEN manager_id = 1 THEN 'Reports to CEO'
+		WHEN manager_id = 3 THEN 'Reports to Sales Director'
+        ELSE 'Standard Reporting'
+	END reporting_line
+FROM employees;
 
+SELECT
+	full_name,
+	IFNULL(bonus,0),
+    CASE 
+		WHEN bonus is NULL THEN 'No Bonus Assigned'
+		WHEN bonus < 3000 THEN 'Small Incentive'
+		WHEN bonus BETWEEN 3000 AND 6999 THEN 'Standard Incentive'
+		WHEN bonus >= 7000 THEN 'Executive Incentive'
+		ELSE 'Other'
+	END bonus_tier
+FROM employees;
 
+SELECT 
+	full_name,
+    department,
+    performance_score
+FROM employees
+ORDER BY 
+	CASE department
+		WHEN 'Engineering' THEN 1
+		WHEN 'Sales' THEN 2
+		WHEN 'Marketing' THEN 3
+		WHEN 'HR' THEN 4
+		ELSE 5
+	END, performance_score DESC;
+    
+SELECT 
+	CASE MONTH(sale_date)
+		WHEN 1 THEN 'Q1 Start'
+		WHEN 2 THEN 'Q1 Mid'
+		WHEN 3 THEN 'Q1 End'
+		ELSE 'Not Q1'
+	END period_name,
+    SUM(amount) AS total_revenue,
+    SUM(quantity) AS total_quantity_sold,
+    ROUND(AVG(amount), 2) AS average_sale_amount 	 	 	
+FROM sales
+GROUP BY 
+	CASE MONTH(sale_date)
+		WHEN 1 THEN 'Q1 Start'
+		WHEN 2 THEN 'Q1 Mid'
+		WHEN 3 THEN 'Q1 End'
+		ELSE 'Not Q1'
+	END;
+#Improvements:
+#MONTH(sale_date) returns 1, 2, 3 — simpler than string matching using DATE_FORMAT when the month names arnt even in the output
+#Uses Simple CASE (CASE expression WHEN value) instead of Searched CASE
+#Added ROUND() and AS aliases for cleaner output
 
+SELECT 
+	product_name,
+    category,
+    amount,
+    quantity,
+    ROUND(CASE
+		WHEN category = 'Electronics' AND amount >= 500 THEN amount * 0.10
+        WHEN category = 'Electronics' AND amount < 500 THEN amount * 0.05
+        WHEN category = 'Furniture' AND quantity >= 400 THEN amount * 0.08
+        WHEN category = 'Furniture' AND quantity < 400 THEN amount * 0.03
+        ELSE amount
+	END, 2) calculated_commission
+FROM sales;
 
+SELECT 
+	full_name,
+    department,
+    salary,
+    performance_score,
+    CASE department
+		WHEN 'Engineering' THEN 
+			CASE
+				WHEN salary >= 90000 THEN 'Principal Engineer'
+				WHEN salary >= 80000 THEN 'Staff Engineer'
+                WHEN salary >= 70000 THEN 'Engineer'
+				ELSE 'Junior Engineer'
+			END
+		WHEN 'Sales' THEN
+			CASE 
+				WHEN performance_score >= 95 THEN 'Elite Sales'
+                WHEN performance_score >= 85 THEN 'Senior Sales'
+                ELSE 'Sales Assosiate'
+			END
+		ELSE 'Support Staff'
+	END classification
+FROM employees;
+
+SELECT 
+	s.salesperson_id,
+	e.full_name,
+    SUM(s.quantity) AS total_quantity,
+    SUM(s.amount) AS total_revenue,
+    CASE
+		WHEN SUM(s.quantity) >= 5 THEN 'High Volume'
+        ELSE 'Standard Volume'
+	END volume_tier,
+    CASE
+		WHEN SUM(s.amount) >= 2000 THEN 'High Value'
+        ELSE 'Standard Value'
+	END value_tier,
+    CASE
+        WHEN SUM(s.quantity) >= 5 AND SUM(s.amount) >= 2000 THEN 'Gold'
+        WHEN SUM(s.quantity) >= 5 OR SUM(s.amount) >= 2000 THEN 'Silver'
+        ELSE 'Bronze'
+    END AS performance_badge
+FROM employees e
+LEFT JOIN sales s
+	ON e.emp_id = s.salesperson_id
+GROUP BY s.salesperson_id, e.full_name
+ORDER BY SUM(s.amount) DESC;
+    
+SELECT 
+	full_name,
+    department,
+    salary AS base_salary,
+    IFNULL(bonus, 0) AS bonus,
+    CASE 
+		WHEN department = 'Sales' OR performance_score >= 90 THEN 'Yes'
+        ELSE 'No'
+	END commission_eligible,
+    CASE 
+		WHEN department = 'Sales' OR performance_score >= 90 THEN salary * 0.05
+        ELSE 0
+	END commission_amount,
+    salary + IFNULL(bonus,0) + 
+		CASE 
+			WHEN department = 'Sales' OR performance_score >= 90 THEN salary * 0.05
+			ELSE salary
+		END AS total_compensation,
+	CASE 
+		WHEN salary + IFNULL(bonus,0) + 
+			CASE 
+				WHEN department = 'Sales' OR performance_score >= 90 THEN salary * 0.05
+				ELSE salary
+			END >= 100000 THEN 'Executive'
+		WHEN Salary + IFNULL(bonus,0) + 
+			CASE 
+				WHEN department = 'Sales' OR performance_score >= 90 THEN salary * 0.05
+				ELSE salary
+			END >= 75000 THEN 'Senior'
+		WHEN salary + IFNULL(bonus,0) + 
+			CASE 
+				WHEN department = 'Sales' OR performance_score >= 90 THEN salary * 0.05
+				ELSE salary
+			END >= 55000 THEN 'Standard'
+		ELSE 'Entry'
+	END compensation_tier
+FROM employees
+ORDER BY salary + IFNULL(bonus,0) + 
+		CASE 
+			WHEN department = 'Sales' OR performance_score >= 90 THEN salary * 0.05
+			ELSE salary
+		END DESC;
+			
