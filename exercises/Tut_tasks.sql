@@ -451,5 +451,39 @@ SELECT #my second attempt after getting advice
 FROM orders
 GROUP BY customerid;
 
+SELECT version();
 
+SELECT 
+	productid,
+    orderid,
+    orderdate,
+    SUM(sales) OVER(PARTITION BY productid) total_sales
+FROM orders;
 
+SELECT 
+    orderid,
+    orderdate,
+    productid,
+    orderstatus,
+    SUM(sales) OVER(PARTITION BY productid, orderstatus) total_sales
+FROM orders;
+
+SELECT
+	orderid,
+    orderdate,
+    sales,
+    RANK() OVER(ORDER BY sales DESC) TotalOrderSalesRanked
+FROM orders;
+
+SELECT 
+	orderid,
+    orderdate,
+    sales,
+    productid,
+    SUM(sales) OVER(PARTITION BY productid ORDER BY sales 
+	ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) total_sales
+FROM orders
+WHERE productid IN(101,102);
+    
+
+    
