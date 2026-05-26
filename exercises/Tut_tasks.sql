@@ -570,6 +570,29 @@ SELECT
     MIN(sales) OVER(PARTITION BY productid) minproductsales
 FROM orders;
     
+#moving average
+SELECT 
+	orderid,
+    orderdate,
+	productid,
+    sales,
+    AVG(sales) OVER(PARTITION BY productid) avg_sales,
+    AVG(sales) OVER(PARTITION BY productid ORDER BY orderdate) moving_average
+FROM orders;
+
+SELECT 
+	orderid,
+    orderdate,
+	productid,
+    sales,
+    ROUND(AVG(sales) OVER(PARTITION BY productid), 0) avg_sales,
+    ROUND(AVG(sales) OVER(PARTITION BY productid ORDER BY orderdate), 0) moving_average,
+    ROUND(AVG(sales) OVER(PARTITION BY productid ORDER BY orderdate
+    ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING), 0) rolling_average
+FROM orders;
+
+
+
 
 
 

@@ -1226,3 +1226,107 @@ ORDER BY salary + IFNULL(bonus,0) +
 # apparently it can be way cleaner and efficient with subqueries so i only have to 
 # write total compensation once as a subquery then just use it whenever i need.
 
+SELECT 
+	product_name,
+    amount,
+    SUM(amount) OVER() grand_total
+FROM sales;
+
+SELECT
+	full_name,
+    salary,
+    ROUND(AVG(salary) OVER(), 0) company_avg_salary
+FROM employees;
+
+SELECT
+	product_name,
+    amount,
+    MAX(amount) OVER() highest_sale_amount
+FROM sales;
+
+SELECT
+	full_name,
+    department,
+    COUNT(*) OVER() emp_count
+FROM employees;
+
+SELECT 
+	product_name,
+    category,
+    amount,
+    SUM(amount) OVER(partition by category) sales_per_category
+FROM sales;
+
+SELECT 
+	full_name,
+    department,
+    salary,
+    AVG(salary) OVER(PARTITION BY department) avg_salary_per_department
+FROM employees;
+
+SELECT 
+	full_name,
+    city,
+    salary,
+    SUM(salary) OVER(PARTITION BY city) total_city_payroll,
+    AVG(salary) OVER(PARTITION BY city) avg_city_payroll,
+    salary - AVG(salary) OVER(PARTITION BY city) salary_diff_from_avg
+FROM employees;
+
+SELECT 
+	product_name,
+    amount,
+    sale_date,
+    SUM(amount) OVER(ORDER BY sale_date) running_total
+FROM sales;
+
+SELECT 
+	product_name,
+    amount,
+    sale_date,
+    ROUND(AVG(amount) OVER(ORDER BY sale_date), 0) running_average
+FROM sales;
+
+SELECT 
+	product_name,
+    category,
+    amount,
+    sale_date,
+    SUM(amount) OVER(PARTITION BY category ORDER BY sale_date) runningtotalpercategory
+FROM sales;
+
+SELECT 
+	amount,
+    sale_date,
+    AVG(amount) OVER(ORDER BY sale_date
+    ROWS 2 PRECEDING) 3sale_moving_average
+FROM sales;
+
+SELECT
+	amount,
+    sale_date,
+    SUM(amount) OVER(ORDER BY sale_date
+    ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) 1previous_current_1following_runningtotal
+FROM sales;
+
+SELECT 
+	full_name,
+    salary,
+    SUM(salary) OVER(ORDER BY salary DESC
+    ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING) total_of_top3_salaries_including_current
+FROM employees;# not the absolute top 3, but top 3 from each frame, 
+# ofc only when current row is row 1 is when its the actual top 3, going forward from 
+#that is just top 3 of each moving frame, useful  for moving averages, rolling sums
+
+
+SELECT
+	full_name,
+    department,
+    salary,
+    SUM(salary) OVER(PARTITION BY department) dept_total_payroll,
+    AVG(salary) OVER(PARTITION BY department) dept_avg_salary,
+    AVG(salary) OVER() company_avg_salary,
+    salary - AVG(salary) OVER(PARTITION BY department) diff_from_dept_avg_salary,
+    ROUND(salary / SUM(salary) OVER(PARTITION BY department) * 100, 2) pct_from_dept_total
+FROM employees;
+
