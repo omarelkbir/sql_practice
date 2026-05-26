@@ -147,3 +147,4 @@ SELECT AVG(IFNULL(salary, 0)) FROM employees;
 #there is simple CASE and searched CASE, simple when u want to compare equality
 # using '=' sign, and searched when more complex, like '< > <= >= AND OR etc'
 # in the simple CASE u can do CASE column_name WHEN value THEN  value. like example above
+

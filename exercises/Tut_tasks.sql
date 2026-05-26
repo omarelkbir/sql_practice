@@ -485,5 +485,91 @@ SELECT
 FROM orders
 WHERE productid IN(101,102);
     
-
+SELECT 
+	orderid,
+    orderdate,
+    customerid,
+	COUNT(*) OVER(PARTITION BY customerid) orders_per_customer,
+    COUNT(*) OVER() orders_count
+FROM orders;
     
+SELECT 
+	*,
+	COUNT(*) OVER() customer_count,
+    COUNT(score) OVER() scores_count
+FROM customers;
+
+SELECT 
+	orderid,
+	COUNT(orderid) OVER(PARTITION BY orderid) checkPK
+FROM orders; #this is to check data quality to ensure there are no duplicates for each PK
+
+SELECT 
+	orderid,
+	COUNT(orderid) OVER(PARTITION BY orderid) checkPK
+FROM orders_archive;#there is duplicates for order id's here, needs cleaning up 
+# or it will mess up analytics and result in inaccurate reports/data thus decisions
+
+SELECT 
+	*
+FROM (
+	SELECT
+		orderid,
+		COUNT(orderid) OVER(PARTITION BY orderid) checkPK
+	FROM orders_archive
+) subquery_test WHERE checkPK > 1;
+#this is to mark out checks that are higher than 1 because 1 is normal and correct
+#but higher means a duplucate in the primary key, so in a large table this makes the 
+# the process of finding them faster and more efficient.
+
+
+SELECT 
+	orderid, 
+    orderdate,
+    productid,
+    SUM(sales) OVER(PARTITION BY productid) sales_per_product,
+    SUM(sales) OVER() total_sales
+FROM orders;
+
+SELECT 
+orderid, 
+orderdate,
+productid,
+SUM(sales) OVER() total_sales,
+CONCAT('%', ROUND(CAST(sales AS FLOAT) / SUM(sales)  OVER() * 100, 2)) AS percent_contribution
+FROM orders;
+
+SELECT 
+	orderid,
+    orderdate,
+    sales,
+    productid,
+    AVG(COALESCE(sales, 0)) OVER() avg_sales,
+    AVG(COALESCE(sales, 0)) OVER(PARTITION BY productid) avg_sales_per_product
+FROM orders;
+
+SELECT 
+*
+FROM (
+	SELECT 
+		orderid,
+		orderdate,
+		sales,
+		AVG(COALESCE(sales, 0)) OVER() avg_sales
+	FROM orders
+)subquery_test WHERE sales > avg_sales;
+
+SELECT
+	orderid,
+    orderdate,
+    sales,
+    productid,
+	MAX(sales) OVER() maxsales,
+    MIN(sales) OVER() minsales,
+    MAX(sales) OVER(PARTITION BY productid) maxproductsales,
+    MIN(sales) OVER(PARTITION BY productid) minproductsales
+FROM orders;
+    
+
+
+
