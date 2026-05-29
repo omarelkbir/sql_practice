@@ -152,3 +152,9 @@ SELECT AVG(IFNULL(salary, 0)) FROM employees;
 # 80 and 80 would get the rank 1 and 2 not 1 and 1. also it does not leave gaps in ranking.
 # meanwhile RANK handles ties. but it does leave gaps
 # dense_rank handles ties but does not leave gaps in ranking.
+
+ROW_NUMBER USE CASES
+#1 Top-N Analysis
+#2 Bottom-N Analysis
+#3 Assign unique IDs
+#4 Quality Checks: Identify Duplicates

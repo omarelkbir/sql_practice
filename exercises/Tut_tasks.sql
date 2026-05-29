@@ -602,11 +602,62 @@ FROM orders; # ROW_NUMBER doesnt handle ties in values, for example:
 # meanwhile RANK handles ties. but it does leave gaps
 # dense_rank handles ties but does not leave gaps in ranking.
 
+SELECT 
+	productid,
+    sales,
+    ROW_NUMBER() OVER(PARTITION BY productid ORDER BY sales DESC) top_highest_performers
+FROM orders;
+
+SELECT * FROM (
+	SELECT	
+    *,
+	ROW_NUMBER() OVER(PARTITION BY orderid ORDER BY creationtime DESC) row_num
+	
+	FROM orders_archive
+)t WHERE row_num = 1;
+
+#ROW_NUMBER USE CASES
+#1 Top-N Analysis
+#2 Bottom-N Analysis
+#3 Assign unique IDs
+#4 Quality Checks: Identify Duplicates
 
 
+SELECT
+	orderid,
+    sales,
+    NTILE(3) OVER(ORDER BY sales DESC) buckets,
+    CASE 
+		WHEN NTILE(3) OVER(ORDER BY sales DESC) = 1 THEN 'High Sales'
+        WHEN NTILE(3) OVER(ORDER BY sales DESC) = 2 THEN 'Medium Sales'
+        WHEN NTILE(3) OVER(ORDER BY sales DESC) = 3 THEN 'Low Sales'
+	END category
+FROM orders;
+# how to do it with subquery so u can avoid copy pasting in the case statements
+SELECT 
+	*,
+	CASE buckets # doing case buckets instead of just case here is unecessary since we're already selecting everything with *
+		WHEN 1 THEN 'High Sales'
+		WHEN 2 THEN 'Medium Sales'
+		WHEN 3 THEN 'Low Sales'
+	END sales_segmentations
+FROM ( 
+	SELECT
+		orderid,
+		sales,
+		NTILE(3) OVER(ORDER BY sales DESC) buckets
+	FROM orders
+)t; # done, subqueries make work much more elegant and efficient.
 
-
-
-
-
+SELECT 
+	*,
+	CONCAT('%', highest_prices * 100) AS top_prices_prcnt
+FROM (
+	SELECT
+		productid,
+		product,
+		price,
+		CUME_DIST() OVER (ORDER BY price DESC) highest_prices
+	FROM products  
+)t WHERE highest_prices <= 0.4;
 
