@@ -591,6 +591,20 @@ SELECT
     ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING), 0) rolling_average
 FROM orders;
 
+SELECT 
+	orderid,
+    sales,
+    ROW_NUMBER() OVER(ORDER BY sales DESC) sales_row_ranking,
+    RANK() 		 OVER(ORDER BY sales DESC) sales_ranking,
+    DENSE_RANK() OVER(ORDER BY sales DESC) sales_dense_ranking
+FROM orders; # ROW_NUMBER doesnt handle ties in values, for example:
+# 80 and 80 would get the rank 1 and 2 not 1 and 1. also it does not leave gaps in ranking.
+# meanwhile RANK handles ties. but it does leave gaps
+# dense_rank handles ties but does not leave gaps in ranking.
+
+
+
+
 
 
 

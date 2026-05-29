@@ -148,3 +148,7 @@ SELECT AVG(IFNULL(salary, 0)) FROM employees;
 # using '=' sign, and searched when more complex, like '< > <= >= AND OR etc'
 # in the simple CASE u can do CASE column_name WHEN value THEN  value. like example above
 
+# ROW_NUMBER doesnt handle ties in values, for example:
+# 80 and 80 would get the rank 1 and 2 not 1 and 1. also it does not leave gaps in ranking.
+# meanwhile RANK handles ties. but it does leave gaps
+# dense_rank handles ties but does not leave gaps in ranking.
