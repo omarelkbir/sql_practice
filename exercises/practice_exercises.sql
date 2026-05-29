@@ -1330,3 +1330,82 @@ SELECT
     ROUND(salary / SUM(salary) OVER(PARTITION BY department) * 100, 2) pct_from_dept_total
 FROM employees;
 
+SELECT 
+	full_name,
+    department,
+    salary,
+    DENSE_RANK() OVER(ORDER BY salary DESC) salary_ranked
+FROM employees;
+
+SELECT 
+	full_name,
+    department,
+    salary,
+    RANK() OVER(ORDER BY salary DESC) salary_ranked
+FROM employees;
+
+SELECT 
+	full_name,
+    department,
+    salary,
+    ROW_NUMBER() OVER(ORDER BY salary DESC) salary_ranked
+FROM employees;
+
+SELECT 
+	full_name,
+    department,
+    salary,
+    RANK() OVER(PARTITION BY department ORDER BY salary DESC) salary_ranked
+FROM employees;
+
+SELECT 
+	full_name,
+    department,
+    salary,
+    NTILE(4) OVER(ORDER BY salary DESC) salary_ranked
+FROM employees;
+
+SELECT 
+	e.full_name,
+    s.region,
+    SUM(s.amount) total_revenue,
+    RANK() OVER (ORDER BY SUM(s.amount) DESC) overall_rank,
+    RANK() OVER (PARTITION BY s.region ORDER BY SUM(s.amount) DESC) reigon_rank
+FROM employees e
+INNER JOIN sales s 
+	ON e.emp_id = s.salesperson_id
+GROUP BY e.emp_id, e.full_name, s.region;
+
+#mini exercise to practice window + group by
+SELECT 
+	department,
+    SUM(salary) total_payroll,
+    RANK() OVER (ORDER BY SUM(salary) DESC) dept_pay_ranked
+FROM employees
+GROUP BY department;
+
+SELECT 
+	product_name,
+    SUM(quantity) total_quantity_sold,
+    RANK() OVER (ORDER BY SUM(quantity) DESC) sales_ranked
+FROM sales
+GROUP BY product_name;
+
+SELECT
+	department,
+    AVG(performance_score) avg_performance,
+    RANK() OVER (ORDER BY AVG(performance_score) DESC) dept_perf_ranked
+FROM employees
+GROUP BY department;
+
+SELECT * FROM (
+	SELECT 
+		DATE_FORMAT(sale_date, '%c') month_num,
+		DATE_FORMAT(sale_date, '%M') month_name,
+		SUM(amount) month_sales,
+		RANK() OVER (ORDER BY SUM(amount) DESC) month_rank
+	FROM sales
+	GROUP BY DATE_FORMAT(sale_date, '%c'),
+		DATE_FORMAT(sale_date, '%M')
+	) AS monthly_revenue WHERE month_rank <= 2;
+    
