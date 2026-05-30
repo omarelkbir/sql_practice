@@ -1409,3 +1409,130 @@ SELECT * FROM (
 		DATE_FORMAT(sale_date, '%M')
 	) AS monthly_revenue WHERE month_rank <= 2;
     
+
+SELECT * FROM (
+	SELECT
+		full_name,
+		department,
+		salary,
+		RANK() OVER(PARTITION BY department ORDER BY salary DESC) dept_salary_rank
+	FROM employees
+    ) top_earners WHERE dept_salary_rank <= 2;
+    
+SELECT * FROM (
+	SELECT 
+		full_name,
+		department,
+		salary,
+		performance_score,
+		DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) salary_dept_rank,
+		DENSE_RANK() OVER (ORDER BY performance_score DESC) perf_overall_rank
+	FROM employees
+	)rankings WHERE salary_dept_rank <= 2 AND perf_overall_rank <= 3;
+    
+SELECT * FROM (
+	SELECT
+		category,
+		product_name,
+		SUM(amount) AS total_revenue,
+		SUM(quantity) AS total_quantity,
+		RANK() OVER (
+			PARTITION BY category 
+            ORDER BY SUM(amount) DESC, SUM(quantity) DESC
+		) AS product_rank
+	FROM sales
+	GROUP BY category, product_name
+    ) AS top_performing_product WHERE product_rank = 1;
+    
+SELECT
+	full_name,
+    department,
+    salary,
+    RANK() OVER (
+		PARTITION BY department ORDER BY salary DESC) AS dept_salary_rank,
+    NULLIF(RANK() OVER (
+		PARTITION BY department ORDER BY salary DESC) - 1, 0) next_higher_salary,
+	NULLIF(RANK() OVER (
+		PARTITION BY department ORDER BY salary DESC) + 1, 0) next_lower_salary
+        # this third ranking doesnt count for the end of the window and returns null
+        # it's impossible with value window functions which idk yet, but this is good enough
+FROM employees;
+
+SELECT department, salary, employees_at_salary
+FROM (
+    SELECT 
+        department,
+        salary,
+        COUNT(*) AS employees_at_salary,
+        RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS salary_rank
+    FROM employees
+    GROUP BY department, salary
+) AS dept_salary_counts
+WHERE employees_at_salary >= 2;
+# i gotta study the count function more bc i dont really know how it actually works
+
+SELECT *,
+	CASE 
+		WHEN salary_rank <= 3 AND perf_rank <= 3 THEN 'Star'
+        WHEN salary_rank > 3 AND perf_rank <= 3 THEN 'High potential'
+        WHEN salary_rank <= 3 AND perf_rank > 3 THEN 'Overpaid'
+        ELSE 'Standard'
+	END classification
+FROM (
+	SELECT 
+		full_name,
+		department,
+		salary,
+		performance_score,
+		DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS salary_rank,
+		DENSE_RANK() OVER (PARTITION BY department ORDER BY performance_score DESC) AS perf_rank
+	FROM employees
+    ) AS rankings; 
+
+# failed at this first then redid it by myself after some gathering some insights. proud of this one
+SELECT *
+FROM (
+	SELECT 
+		region,
+		full_name,
+		total_revenue,
+		region_rank,
+		CASE 
+			WHEN region_rank = 1 THEN 'Yes' 
+			ELSE 'No'
+		END is_true_mvp,
+		RANK() OVER (PARTITION BY full_name ORDER BY total_revenue DESC) AS best_region_rank
+	FROM (
+		SELECT 
+			s.region,
+			e.full_name,
+			SUM(s.amount) AS total_revenue,
+			DENSE_RANK() OVER (PARTITION BY region ORDER BY SUM(s.amount) DESC) AS region_rank
+		FROM employees e 
+		INNER JOIN sales s 
+			ON e.emp_id = s.salesperson_id
+		GROUP BY region, full_name
+		) AS region_mvps
+	) AS each_mvps_best_region
+WHERE is_true_mvp = 'Yes' AND best_region_rank = 1;
+
+
+SELECT 
+	*,
+    ABS(CAST(dept_salary_rank AS SIGNED) - CAST(dept_perf_rank AS SIGNED)) AS consistency_score
+# we did cast here bc DENSE_RANK returns an unsigned value and when doing subtraction 
+# on them and the result is negative, then it will cause an error. so we cast them
+# to a different data type, like SIGNED to fix that issue.
+FROM (
+	SELECT
+		full_name,
+		department,
+		salary,
+		performance_score,
+		DENSE_RANK() OVER (ORDER BY salary DESC) AS comp_salary_rank,
+		DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS dept_salary_rank,
+		DENSE_RANK() OVER (PARTITION BY department ORDER BY performance_score DESC) AS dept_perf_rank,
+		NTILE(4) OVER (ORDER BY salary DESC) AS salary_quartile
+	FROM employees
+    ) AS rankings;
+    
