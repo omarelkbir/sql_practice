@@ -661,3 +661,67 @@ FROM (
 	FROM products  
 )t WHERE highest_prices <= 0.4;
 
+# Value window functions
+
+/*SELECT 
+	DATE_FORMAT(orderdate, '%M') AS month,
+    SUM(sales) AS current_month_sales,
+    LAG(SUM(sales)) OVER (ORDER BY DATE_FORMAT(orderdate, '%M')) AS previous_month_sales
+FROM orders
+GROUP BY DATE_FORMAT(orderdate, '%M');
+*/ # now the reason i didnt use the full month name instead of its number bc it has 
+# an issue with order by, feburary shows up before january etc. numbers are more reliable
+# and faster, just use the full name when reporting from now on and avoid it in general
+SELECT 
+	*,
+    current_month_sales - previous_month_sales AS MoM_change,
+    ROUND((current_month_sales - previous_month_sales) / previous_month_sales * 100, 2) AS MoM_perc
+FROM (
+	SELECT 
+		MONTH(orderdate) AS month,
+		SUM(sales) AS current_month_sales,
+		LAG(SUM(sales)) OVER (ORDER BY MONTH(orderdate)) AS previous_month_sales
+	FROM orders
+	GROUP BY MONTH(orderdate)
+    ) AS monthly_sales;
+    
+
+SELECT 
+	customerid,
+	AVG(days_between_orders) AS avg_days,
+    RANK() OVER(ORDER BY AVG(days_between_orders)) AS most_loyal_customer
+FROM (
+	SELECT
+		orderid,
+		customerid,
+		orderdate AS current_order,
+		LEAD(orderdate) OVER (PARTITION BY customerid ORDER BY orderdate) AS next_order,
+		DATEDIFF(LEAD(orderdate) OVER (PARTITION BY customerid ORDER BY orderdate), orderdate) AS days_between_orders
+	FROM orders
+) AS orders_info
+GROUP BY customerid
+HAVING AVG(days_between_orders) != 0;
+
+SELECT
+	o.productid,
+    p.product,
+    MIN(o.sales) AS lowest_sales,
+    MAX(o.sales) AS highest_sales
+FROM orders o 
+JOIN products p
+	ON o.productid = p.productid
+GROUP BY productid, product;
+# OR
+SELECT 
+	productid,
+    sales,
+    FIRST_VALUE(sales) OVER (PARTITION BY productid ORDER BY sales) AS lowest_sales,
+    LAST_VALUE(sales) OVER (PARTITION BY productid ORDER BY sales
+    ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS highest_sales,
+    # last_value with default frame literally useless, u have to change frame for it
+    # to work as intended, here's proof with it with default frame:
+    LAST_VALUE(sales) OVER (PARTITION BY productid ORDER BY sales) AS function_with_default_frame
+	# or u can keep the frame as default but switch the sorting order for it to work too
+    # for example above we sorted highest sales ASC, so just do DESC so it will as well.
+FROM orders;
+

@@ -158,3 +158,23 @@ ROW_NUMBER USE CASES
 #2 Bottom-N Analysis
 #3 Assign unique IDs
 #4 Quality Checks: Identify Duplicates
+
+ ABS(CAST(dept_salary_rank AS SIGNED) - CAST(dept_perf_rank AS SIGNED)) AS consistency_score
+# we did cast here bc DENSE_RANK returns an unsigned value and when doing subtraction 
+# on them and the result is negative, then it will cause an error. so we cast them
+# to a different data type, like SIGNED to fix that issue.
+
+#ABS(CAST(dept_salary_rank AS SIGNED) - CAST(dept_perf_rank AS SIGNED)) AS consistency_score
+# we did cast here bc DENSE_RANK returns an unsigned value and when doing subtraction 
+# on them and the result is negative, then it will cause an error. so we cast them
+# to a different data type, like SIGNED to fix that issue.
+
+FIRST_VALUE(sales) OVER (PARTITION BY productid ORDER BY sales) AS lowest_sales,
+    LAST_VALUE(sales) OVER (PARTITION BY productid ORDER BY sales
+    ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS highest_sales,
+    # last_value with default frame literally useless, u have to change frame for it
+    # to work as intended, here's proof with it with default frame:
+    LAST_VALUE(sales) OVER (PARTITION BY productid ORDER BY sales) AS function_with_default_frame
+	# or u can keep the frame as default but switch the sorting order for it to work too
+    # for example above we sorted highest sales ASC, so just do DESC so it will as well.
+FROM orders;

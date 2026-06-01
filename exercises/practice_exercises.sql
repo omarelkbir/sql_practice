@@ -1536,3 +1536,178 @@ FROM (
 	FROM employees
     ) AS rankings;
     
+SELECT 
+	sale_id,
+    product_name,
+    sale_date,
+    amount,
+    LAG(amount, 1, 0) OVER (ORDER BY sale_date) AS prev_sale
+FROM sales;
+
+SELECT 
+	sale_id,
+    product_name,
+    sale_date,
+    amount,
+    LEAD(amount, 1, 0) OVER (ORDER BY sale_date) AS next_sale
+FROM sales;
+
+SELECT 
+	full_name,
+    department,
+    hire_date,
+    salary,
+    LAG(salary) OVER (PARTITION BY department ORDER BY hire_date) AS prev_salary_in_dept
+FROM employees;
+
+SELECT 
+	*,
+    curr_amount - prev_amount AS amount_change
+FROM (
+	SELECT
+		product_name,
+		sale_date,
+		amount AS curr_amount,
+		LAG(amount) OVER (ORDER BY sale_date) AS prev_amount
+	FROM sales
+	) AS sales_info;
+
+SELECT
+	*,
+    ABS(salary - prev_higher_salary) AS gap_to_above
+FROM (
+	SELECT 
+		full_name,
+		department,
+		salary,
+		LAG(salary) OVER (PARTITION BY department ORDER BY salary DESC) AS prev_higher_salary
+	FROM employees
+    )t;
+SELECT
+	*,
+    ROUND((amount - prev_amount) / prev_amount * 100, 1) AS perc_change
+FROM (
+	SELECT
+		product_name,
+		category,
+		sale_date,
+		amount,
+		LAG(amount) OVER (PARTITION BY category ORDER BY sale_date) AS prev_amount
+	FROM sales
+    )t;
+
+SELECT
+	full_name,
+    department,
+    salary,
+    FIRST_VALUE(salary) OVER (PARTITION BY department ORDER BY salary DESC) AS highest_paid,
+	salary - FIRST_VALUE(salary) OVER (PARTITION BY department ORDER BY salary DESC) AS salary_diff
+FROM employees;
+
+SELECT
+	product_name,
+    category,
+    sale_date,
+    amount,
+    FIRST_VALUE(amount) OVER(PARTITION BY category ORDER BY sale_date) AS firsteversale_inthecategory,
+	LAST_VALUE(amount) OVER(PARTITION BY category ORDER BY sale_date
+    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS most_recent_sale_incategory
+FROM sales;    
+    
+SELECT
+	full_name,
+    department,
+    hire_date,
+    FIRST_VALUE(full_name) OVER(PARTITION BY department ORDER BY hire_date) AS first_dept_hire,
+	LAST_VALUE(full_name) OVER(PARTITION BY department ORDER BY hire_date
+    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS most_recent_hire
+FROM employees;
+
+SELECT 
+	full_name,
+    department,
+    salary,
+	NTH_VALUE(salary, 3) OVER (PARTITION BY department ORDER BY salary DESC
+    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS third_highest_paid
+FROM employees;
+
+SELECT
+	product_name,
+    sale_date,
+    amount,
+    AVG(amount) OVER(ORDER BY sale_date
+    ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING) AS five_day_moving_avg
+FROM sales;
+
+SELECT
+	full_name,
+    department,
+    performance_score,
+    LAG(performance_score, 2) OVER (
+		PARTITION BY department ORDER BY performance_score DESC) AS two_positions_above,
+	LEAD(performance_score, 2) OVER (
+		PARTITION BY department ORDER BY performance_score DESC) AS two_positions_below
+FROM employees;
+
+SELECT
+	*,
+    CASE
+		WHEN current_amount = prev_amount OR prev_amount IS NULL THEN 'Stable'
+        WHEN current_amount > prev_amount THEN 'Increasing'
+        WHEN current_amount < prev_amount THEN 'Decreasing'
+	END trend
+FROM (
+	SELECT 
+		sale_id,
+		product_name,
+		sale_date,
+		amount AS current_amount,
+		LAG(amount) OVER (ORDER BY sale_date) AS prev_amount,
+		FIRST_VALUE(amount) OVER (ORDER BY sale_date) AS first_sale
+	FROM sales
+    ) AS sales_momentum_report;
+
+SELECT 
+	*,
+    CASE
+		WHEN prev_hire IS NULL OR next_hire IS NULL THEN 'No Comparison'
+		WHEN salary > prev_hire AND salary > next_hire THEN 'Above Midpoint'
+        WHEN salary < prev_hire AND salary < next_hire THEN 'Below Midpoint'
+        ELSE 'At Midpoint'
+	END salary_benchmark
+FROM (
+	SELECT 
+		full_name,
+		department,
+		hire_date,
+		salary,
+		LAG(salary) OVER (PARTITION BY department ORDER BY hire_date) AS prev_hire,
+		LEAD(salary) OVER (PARTITION BY department ORDER BY hire_date) AS next_hire
+	FROM employees
+    ) AS salary_benchmarking_report;
+
+SELECT 
+	*,
+    CASE 
+		WHEN performance_score > dept_prev_score THEN 'Improving'
+        WHEN performance_score < dept_prev_score THEN 'Declining'
+        ELSE 'Stable'
+	END AS performance_trend
+FROM (
+	SELECT 
+		full_name,
+		department,
+		hire_date,
+		salary,
+		LAG(salary) OVER (ORDER BY hire_date) AS prev_hire_,
+		LEAD(salary) OVER (ORDER BY hire_date) AS next_hire,
+		FIRST_VALUE(salary) OVER (PARTITION BY department ORDER BY hire_date) AS dept_first_hire_salary,
+		LAST_VALUE(salary) OVER (
+			PARTITION BY department ORDER BY hire_date
+			ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS dept_most_recent_hire_salary,
+		performance_score,
+		LAG(performance_score) OVER (PARTITION BY department ORDER BY hire_date) AS dept_prev_score
+	FROM employees
+	) AS employee_timeline_analysis
+ORDER BY hire_date;
+    
