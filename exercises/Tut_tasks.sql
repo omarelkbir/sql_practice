@@ -725,3 +725,60 @@ SELECT
     # for example above we sorted highest sales ASC, so just do DESC so it will as well.
 FROM orders;
 
+SELECT * FROM INFORMATION_SCHEMA.SCHEMATA;
+#shows the metadata of our database, meaning data of our data, this is called a catalog 
+#inside a database. 
+
+SHOW DATABASES;                          -- All databases
+SHOW TABLES FROM salesdb;                -- Tables in salesdb
+SHOW COLUMNS FROM orders FROM salesdb;   -- Columns in orders
+DESC salesdb.orders;                     -- Same as above
+SHOW CREATE TABLE salesdb.orders;        -- Full CREATE TABLE statement
+
+#subqueries tasks
+SELECT 
+	productid,
+    product,
+    price
+FROM products
+WHERE price > (SELECT AVG(price) FROM products);
+# OR if u wanna see the avg price column too
+SELECT
+	*
+FROM (
+	SELECT
+		productid,
+		product,
+		price,
+		AVG(price) OVER () AS avg_price
+	FROM products)t
+WHERE price > avg_price;
+
+SELECT 
+	*,
+    RANK() OVER(ORDER BY total_amount DESC) AS ranking
+FROM (
+	SELECT 
+		customerid,
+		SUM(sales) AS total_amount
+	FROM orders
+    GROUP BY customerid)t;
+
+SELECT
+	productid,
+    product,
+    price,
+    (SELECT COUNT(*) FROM orders) AS orders_count
+FROM products;
+
+SELECT * FROM customers c
+LEFT JOIN (
+	SELECT 
+		o.customerid,
+		COUNT(orderid) AS total_orders
+	FROM orders o
+    GROUP BY o.customerid
+    )t ON c.customerid = t.customerid;
+    # = t.customerid not o.customerid because orders o is inside the subquery and the
+    # ON part is outside the subquery so it doesnt work, so its t.customerid not o.
+    

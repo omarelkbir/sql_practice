@@ -178,3 +178,18 @@ FIRST_VALUE(sales) OVER (PARTITION BY productid ORDER BY sales) AS lowest_sales,
 	# or u can keep the frame as default but switch the sorting order for it to work too
     # for example above we sorted highest sales ASC, so just do DESC so it will as well.
 FROM orders;
+
+SELECT * FROM INFORMATION_SCHEMA.SCHEMATA;
+#shows the metadata of our database, meaning data of our data, this is called a catalog 
+#inside a database. 
+
+SHOW DATABASES;                          -- All databases
+SHOW TABLES FROM salesdb;                -- Tables in salesdb
+SHOW COLUMNS FROM orders FROM salesdb;   -- Columns in orders
+DESC salesdb.orders;                     -- Same as above
+SHOW CREATE TABLE salesdb.orders;        -- Full CREATE TABLE statement
+
+
+)t ON c.customerid = t.customerid;
+    # = t.customerid not o.customerid because orders o is inside the subquery and the
+    # ON part is outside the subquery so it doesnt work, so its t.customerid not o.
