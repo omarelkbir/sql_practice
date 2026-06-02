@@ -193,3 +193,10 @@ SHOW CREATE TABLE salesdb.orders;        -- Full CREATE TABLE statement
 )t ON c.customerid = t.customerid;
     # = t.customerid not o.customerid because orders o is inside the subquery and the
     # ON part is outside the subquery so it doesnt work, so its t.customerid not o.
+    # or u can just name the subquery o as in orders haha, so it's more logical
+	# now we have customerid twice so we select everything from main query and only 
+    # total orders from subquery
+
+#Never use SELECT * in production queries. Always list the columns you actually need
+#for example using it here caused having 2 customerid columns in the result table
+#u can use USING(customerid), it auto solves duplicate columns issue at the result table

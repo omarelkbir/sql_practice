@@ -771,14 +771,71 @@ SELECT
     (SELECT COUNT(*) FROM orders) AS orders_count
 FROM products;
 
-SELECT * FROM customers c
+SELECT 
+	c.*,
+    t.total_orders
+FROM customers c
 LEFT JOIN (
 	SELECT 
-		o.customerid,
+		customerid,
 		COUNT(orderid) AS total_orders
-	FROM orders o
-    GROUP BY o.customerid
+	FROM orders 
+    GROUP BY customerid
     )t ON c.customerid = t.customerid;
     # = t.customerid not o.customerid because orders o is inside the subquery and the
     # ON part is outside the subquery so it doesnt work, so its t.customerid not o.
+    # or u can just name the subquery o as in orders haha, so it's more logical
+	# now we have customerid twice so we select everything from main query and only 
+    # total orders from subquery
+
+SELECT 
+	productid,
+    product,
+    price
+FROM products
+WHERE price > (SELECT AVG(price) FROM products);
+
+SELECT * FROM orders
+WHERE customerid IN(SELECT customerid FROM customers WHERE country = 'Germany');
+
+	
+SELECT 
+	firstname,
+	gender,
+	salary
+FROM employees
+WHERE gender = 'F' AND salary > ANY (SELECT salary FROM employees WHERE gender = 'M');
+
+SELECT * FROM customers c
+INNER JOIN (
+	SELECT 
+		customerid,
+        COUNT(*) AS total_orders_per_customers
+	FROM orders 
+    GROUP BY customerid
+    )o ON c.customerid = o.customerid;
+#Never use SELECT * in production queries. Always list the columns you actually need
+#for example using it here caused having 2 customerid columns in the result table
+#u can use USING(customerid), it auto solves duplicate columns issue at the result table
+
+# ALTERNATIVE SOLUTION
+SELECT
+	*,
+    (SELECT COUNT(*) FROM orders o WHERE o.customerid = c.customerid) AS total_sales_per_customer
+FROM customers c;
+
+SELECT * FROM orders o
+WHERE EXISTS (
+			SELECT 1 #doesnt matter what u put here when u use exist so everyone just agreed to just use 1 since its fastest
+			FROM customers c
+			WHERE country = 'Germany' AND c.customerid = o.customerid
+			);
+# for the opposite:
+SELECT * FROM orders o
+WHERE NOT EXISTS (
+			SELECT 1 
+			FROM customers c
+			WHERE country = 'Germany' AND c.customerid = o.customerid
+			);
+
     

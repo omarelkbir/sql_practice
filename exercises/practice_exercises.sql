@@ -1712,4 +1712,94 @@ FROM (
 ORDER BY hire_date;
 
 
+
+
+#creating a new database with more tables for upcoming exercises
+CREATE DATABASE IF NOT EXISTS revision2;
+USE revision2;
+
+CREATE TABLE departments (
+    dept_id INT PRIMARY KEY,
+    dept_name VARCHAR(50) NOT NULL,
+    location VARCHAR(50),
+    budget DECIMAL(12,2),
+    established_date DATE
+);
+
+CREATE TABLE employees (
+    emp_id INT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100),
+    hire_date DATE NOT NULL,
+    salary DECIMAL(10,2) NOT NULL,
+    dept_id INT,
+    manager_id INT,
+    FOREIGN KEY (dept_id) REFERENCES departments(dept_id),
+    FOREIGN KEY (manager_id) REFERENCES employees(emp_id)
+);
+
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(100) NOT NULL,
+    city VARCHAR(50),
+    join_date DATE
+);
+
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    emp_id INT,
+    customer_id INT,
+    order_date DATE NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'completed',
+    FOREIGN KEY (emp_id) REFERENCES employees(emp_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+);
+
+INSERT INTO departments VALUES
+(1, 'Engineering', 'New York', 2000000.00, '2015-01-15'),
+(2, 'Sales', 'Chicago', 1500000.00, '2016-03-20'),
+(3, 'Human Resources', 'New York', 800000.00, '2017-06-10'),
+(4, 'Marketing', 'Los Angeles', 1200000.00, '2018-09-01'),
+(5, 'Intern', 'Remote', 200000.00, '2023-01-01');
+
+INSERT INTO employees VALUES
+(101, 'John', 'Smith', 'john.smith@techcorp.com', '2019-03-10', 95000.00, 1, NULL),
+(102, 'Sarah', 'Johnson', 'sarah.j@techcorp.com', '2020-07-15', 88000.00, 1, 101),
+(103, 'Michael', 'Brown', 'mbrown@techcorp.com', '2018-11-20', 110000.00, 1, 101),
+(104, 'Emily', 'Davis', 'emily.d@hrhub.com', '2021-01-10', 52000.00, 3, NULL),
+(105, 'David', 'Wilson', 'dwilson@hrhub.com', '2017-05-22', 75000.00, 3, 104),
+(106, 'Jessica', 'Miller', 'jmiller@hrhub.com', '2022-08-14', 48000.00, 3, 104),
+(107, 'Daniel', 'Garcia', 'dgarcia@salespro.com', '2019-09-05', 82000.00, 2, NULL),
+(108, 'Laura', 'Martinez', 'laura.m@salespro.com', '2020-04-18', 79000.00, 2, 107),
+(109, 'James', 'Anderson', 'james.a@marketguru.com', '2021-06-30', 68000.00, 4, NULL),
+(110, 'Linda', 'Thomas', 'linda.t@marketguru.com', '2023-02-10', 42000.00, 5, 109),
+(111, 'Robert', 'Taylor', 'robert.t@techcorp.com', '2023-03-01', 38000.00, 5, 103),
+(112, 'Patricia', 'White', 'pat.white@techcorp.com', '2020-10-05', 92000.00, 1, 101),
+(113, 'Mark', 'Lee', 'mark.lee@salespro.com', '2022-01-20', 55000.00, 2, 107);
+
+INSERT INTO customers VALUES
+(201, 'Acme Corp', 'New York', '2020-01-15'),
+(202, 'Global Tech', 'Chicago', '2019-06-20'),
+(203, 'Bright Ideas', 'Los Angeles', '2021-03-10'),
+(204, 'Fast Solutions', 'New York', '2022-07-01'),
+(205, 'New Horizons', 'Miami', '2023-01-10'),
+(206, 'Stellar Inc', 'Chicago', '2020-11-15'),
+(207, 'Delta Systems', 'Boston', '2023-05-01');
+
+INSERT INTO orders VALUES
+(301, 102, 201, '2024-01-15', 4500.00, 'completed'),
+(302, 103, 202, '2024-02-10', 8200.00, 'completed'),
+(303, 107, 201, '2024-01-20', 3100.00, 'completed'),
+(304, 108, 203, '2024-03-05', 2800.00, 'pending'),
+(305, 102, 204, '2024-02-28', 5600.00, 'completed'),
+(306, 109, 202, '2024-01-10', 1900.00, 'completed'),
+(307, 112, 201, '2024-03-15', 7400.00, 'completed'),
+(308, 107, 205, '2024-02-20', 4200.00, 'completed'),
+(309, 103, 206, '2024-03-01', 9500.00, 'completed'),
+(310, 108, 201, '2024-03-10', 3300.00, 'completed'),
+(311, 105, 204, '2024-01-25', 2100.00, 'completed'),
+(312, 110, 203, '2024-02-15', 1200.00, 'completed');
     
+
