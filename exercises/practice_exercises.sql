@@ -1803,3 +1803,89 @@ INSERT INTO orders VALUES
 (312, 110, 203, '2024-02-15', 1200.00, 'completed');
     
 
+#exercises
+SELECT
+	first_name,
+    last_name,
+    salary
+FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);
+
+SELECT 
+	first_name,
+    last_name,
+    salary,
+    (SELECT AVG(salary) FROM employees) AS avg_salary
+FROM employees;
+
+SELECT
+	first_name,
+    last_name,
+    dept_id
+FROM employees
+WHERE dept_id IN (
+				SELECT dept_id 
+                FROM departments 
+                WHERE location = 'New York');
+                
+SELECT customer_id, customer_name
+FROM customers
+WHERE customer_id NOT IN (
+	SELECT customer_id
+    FROM orders);
+
+SELECT dept_id, dept_name
+FROM departments d
+WHERE EXISTS (
+	SELECT 1 
+    FROM employees e
+    WHERE salary > 90000 AND e.dept_id = d.dept_id);
+
+SELECT dept_name, total_payroll
+FROM (
+	SELECT d.dept_name, SUM(e.salary) AS total_payroll
+	FROM employees e
+	INNER JOIN departments d 
+		ON e.dept_id = d.dept_id
+	GROUP BY d.dept_name
+) AS payrolls
+WHERE total_payroll > (
+	SELECT AVG(dept_total) 
+	FROM (
+		SELECT SUM(salary) AS dept_total
+        FROM employees
+        GROUP BY dept_id
+	) AS dept_totals
+);
+
+SELECT dept_name, AVG(dept_payroll) AS dept_avg
+FROM (
+	SELECT d.dept_id, d.dept_name, AVG(e.salary) AS dept_payroll
+    FROM employees e
+    INNER JOIN departments d
+		ON e.dept_id = d.dept_id
+	GROUP BY d.dept_id, d.dept_name
+    ) AS dept_payroll
+GROUP BY dept_id
+HAVING AVG(dept_payroll) > (SELECT AVG(salary) FROM employees);
+# THIS TOOK ME LIKE 30-40 MINTUES TO DO FOR SOME REASON, BUT IT WAS ACTUALLY SIMPLE
+# HERE IS THE HOW ITS SOVED WITHOUT OVER COMPLICATING IT: 
+
+SELECT d.dept_name, AVG(e.salary) AS dept_avg
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.dept_id
+GROUP BY d.dept_id, d.dept_name
+HAVING AVG(e.salary) > (SELECT AVG(salary) FROM employees);
+# 30 mins for this bro...
+
+
+SELECT e.first_name, e.last_name, d.dept_name, e.salary
+FROM employees e
+INNER JOIN departments d
+	ON e.dept_id = d.dept_id 
+WHERE salary >= (	
+				SELECT dept_id, MAX(salary)
+                FROM employees e
+                GROUP BY dept_id
+                WHERE e.dept_id = d.dept_id)
+					
