@@ -1879,13 +1879,54 @@ HAVING AVG(e.salary) > (SELECT AVG(salary) FROM employees);
 # 30 mins for this bro...
 
 
+
+SELECT d.dept_name, AVG(e.salary) AS avg_salary
+FROM departments d
+LEFT JOIN employees e
+	ON d.dept_id = e.dept_id
+GROUP BY d.dept_name
+HAVING AVG(e.salary) > (SELECT AVG(salary) FROM employees);
+# OK SOLVED IT AGAIN IN 5 MIN AFTER 2 DAYS BREAK WHILE LEARNING ON THE SIDE.
+
+#this is exercise 8, and i've realized, there is usually many ways to solve an sql problem
+#this one for example was easier using window functions, so i decided that for every
+#exercise from now on, i will solve it with all the methods possible, wether subqueries
+#window functions or regular sql. its to hone my skills and not forget something while 
+#learning something else, for example i forgot a lot abt window functions
+
+# ex8 using correlated subqueries
 SELECT e.first_name, e.last_name, d.dept_name, e.salary
 FROM employees e
-INNER JOIN departments d
-	ON e.dept_id = d.dept_id 
-WHERE salary >= (	
-				SELECT dept_id, MAX(salary)
-                FROM employees e
-                GROUP BY dept_id
-                WHERE e.dept_id = d.dept_id)
-					
+JOIN departments d
+	ON e.dept_id = d.dept_id
+WHERE e.salary = (SELECT MAX(salary)
+				  FROM employees e1
+                  WHERE e1.dept_id = e.dept_id
+);
+# ex8 using joins (self join as well)
+SELECT e.first_name, e.last_name, d.dept_name, e.salary
+FROM employees e
+JOIN departments d
+	ON e.dept_id = d.dept_id
+JOIN (
+	SELECT dept_id, MAX(salary)
+    FROM employees 
+    GROUP BY dept_id
+) m ON e.dept_id = m.dept_id AND e.salary = MAX(m.salary);
+# ex8 using window functions
+
+SELECT first_name, last_name, dept_name, salary
+FROM (
+	SELECT 
+		e.first_name,
+		e.last_name,
+		d.dept_name,
+		e.salary,
+		RANK() OVER (PARTITION BY e.dept_id ORDER BY e.salary DESC) AS rnk
+	FROM employees e
+	JOIN departments d
+		ON e.dept_id = d.dept_id
+) AS ranked WHERE rnk = 1;
+
+#redoing the subquery exercises and solving them in all other possible methods too.
+#ex1

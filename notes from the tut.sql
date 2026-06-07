@@ -200,3 +200,9 @@ SHOW CREATE TABLE salesdb.orders;        -- Full CREATE TABLE statement
 #Never use SELECT * in production queries. Always list the columns you actually need
 #for example using it here caused having 2 customerid columns in the result table
 #u can use USING(customerid), it auto solves duplicate columns issue at the result table
+
+#I've realized, there is usually many ways to solve an sql problem
+#this one for example was easier using window functions, so i decided that for every
+#exercise from now on, i will solve it with all the methods possible, wether subqueries
+#window functions or regular sql. its to hone my skills and not forget something while 
+#learning something else, for example i forgot a lot abt window functions
