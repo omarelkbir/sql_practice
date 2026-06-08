@@ -1977,19 +1977,174 @@ SELECT first_name, last_name, d.dept_name
 FROM employees e
 INNER JOIN departments d
 ON e.dept_id = d.dept_id 
-WHERE d.dept_name IN (
-					SELECT dept_name
-                    FROM departments
-                    WHERE location = 'New York'
-                    );
+WHERE d.location = 'New York';
 
 SELECT 
-	first_name,
-    last_name,
-	(SELECT dept_name FROM departments WHERE location = 'New York')
-FROM employees 
-WHERE dept_id IN (
+	e.first_name,
+    e.last_name,
+	(SELECT d.dept_name FROM departments d WHERE e.dept_id = d.dept_id) AS dept_name
+FROM employees e
+WHERE e.dept_id IN (
 				SELECT dept_id
                 FROM departments 
                 WHERE location = 'New York'
+); 
+
+#exercise 4
+SELECT customer_name, city 
+FROM customers
+WHERE customer_id NOT IN (
+						SELECT customer_id
+                        FROM orders
+                        );
+
+SELECT c.customer_name, c.city 
+FROM customers c
+WHERE NOT EXISTS (
+				SELECT o.customer_id
+                FROM orders o
+                WHERE o.customer_id = c.customer_id
+                );
+
+SELECT c.customer_name, c.city
+FROM orders o
+LEFT JOIN customers c
+	ON c.customer_id = o.customer_id;
+#left join orders to customers so all customer_ids that are in orders show up
+# and id's who havnt placed an orders dont show up bc htye're not in orders table
+
+#exercise 5
+SELECT dept_name
+FROM departments d
+WHERE EXISTS (
+	SELECT salary 
+    FROM employees e
+    WHERE salary > 90000 AND e.dept_id = d.dept_id
 );
+
+SELECT dept_name
+FROM departments 
+WHERE dept_id IN (
+				SELECT dept_id
+                FROM employees 
+                WHERE salary > 90000
+);
+
+SELECT d.dept_name
+FROM departments d
+INNER JOIN employees e
+	ON d.dept_id = e.dept_id 
+WHERE e.salary > 90000;
+
+#exercise 6
+SELECT 
+    d.dept_name,
+    m.total_payroll
+FROM (
+    SELECT 
+        e.dept_id, 
+        SUM(e.salary) AS total_payroll
+    FROM employees e
+    GROUP BY e.dept_id
+) AS m
+INNER JOIN departments d ON d.dept_id = m.dept_id
+WHERE m.total_payroll > (
+    SELECT AVG(dept_total) 
+    FROM (
+        SELECT SUM(salary) AS dept_total
+        FROM employees
+        GROUP BY dept_id
+    ) AS all_depts
+);	
+	
+SELECT *
+FROM (	
+	SELECT 
+		d.dept_name,
+		SUM(e.salary) OVER (PARTITION BY d.dept_id) AS total_payroll
+	FROM employees e
+	INNER JOIN departments d
+		ON e.dept_id = d.dept_id
+	) AS dept_total
+WHERE total_payroll > ( 
+	SELECT AVG(dept_total)
+	FROM (
+		SELECT dept_id, SUM(salary) AS dept_total
+        FROM employees
+        GROUP BY dept_id
+	) AS dept_payroll
+);
+
+#exercise 7
+SELECT 
+	d.dept_name,
+    AVG(e.salary) AS dept_avg
+FROM employees e
+INNER JOIN departments d
+	ON e.dept_id = d.dept_id
+GROUP BY e.dept_id
+HAVING AVG(e.salary) > (
+	SELECT AVG(salary)
+    FROM employees
+    );
+
+SELECT d.dept_name, t.dept_avg
+FROM departments d
+INNER JOIN (
+	SELECT dept_id, AVG(salary) AS dept_avg
+    FROM employees
+    GROUP BY dept_id
+) AS t ON d.dept_id = t.dept_id
+WHERE t.dept_avg > (
+	SELECT AVG(salary)
+    FROM employees
+    );
+   
+SELECT *
+FROM (   
+	SELECT
+		d.dept_name,
+		AVG(salary) OVER (PARTITION BY e.dept_id) AS dept_avg
+	FROM employees e
+	INNER JOIN departments d 
+		ON e.dept_id = d.dept_id
+) AS t WHERE dept_avg > (
+	SELECT AVG(salary)
+    FROM employees
+);
+
+#exercise 8
+SELECT e.first_name, e.last_name, d.dept_name, e.salary
+FROM employees e
+INNER JOIN departments d
+	ON e.dept_id = d.dept_id
+WHERE e.salary = (
+	SELECT MAX(salary)
+    FROM employees e1
+    WHERE e1.dept_id = e.dept_id
+);
+
+SELECT e.first_name, e.last_name, d.dept_name, e.salary
+FROM employees e
+INNER JOIN departments d
+	ON e.dept_id = d.dept_id 
+INNER JOIN (
+	SELECT dept_id, MAX(salary) AS max_salary
+    FROM employees
+    GROUP BY dept_id
+) AS t ON e.dept_id = t.dept_id AND e.salary = t.max_salary;
+
+SELECT 	first_name,	last_name, dept_name, salary
+FROM (
+    SELECT 
+		e.first_name,	
+        e.last_name,
+        d.dept_name,
+        e.salary,
+        RANK() OVER (PARTITION BY e.dept_id ORDER BY e.salary DESC) AS rnk
+	FROM employees e
+    INNER JOIN departments d
+		ON e.dept_id = d.dept_id
+	) AS ranks WHERE rnk = 1;
+	
+#exercise 9
