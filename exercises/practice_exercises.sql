@@ -1930,3 +1930,66 @@ FROM (
 
 #redoing the subquery exercises and solving them in all other possible methods too.
 #ex1
+SELECT first_name, last_name, salary
+FROM employees 
+WHERE salary > (SELECT AVG(salary) FROM employees);
+
+SELECT first_name, last_name, salary
+FROM employees e
+CROSS JOIN (SELECT AVG(salary) AS avg_salary FROM employees) company_wide_avg
+ON e.salary > company_wide_avg.avg_salary;
+#cross join joins each row in table 1 to each row in table 2 
+
+
+SELECT first_name,
+		last_name,
+		salary
+FROM (
+	SELECT 
+		first_name,
+		last_name,
+		salary,
+		AVG(salary) OVER() AS avg_salary
+	FROM employees
+) AS avg_sal WHERE salary > avg_salary;
+
+#exercise 2 
+SELECT 
+	first_name,
+    last_name,
+    salary,
+    (SELECT AVG(salary) FROM employees) AS company_avg
+FROM employees;
+
+SELECT e.first_name, e.last_name, e.salary, avg_table.company_avg
+FROM employees e
+CROSS JOIN (SELECT AVG(salary) AS company_avg FROM employees) AS avg_table
+ON 	e.salary > avg_table.company_avg;
+
+SELECT * 
+FROM (
+	SELECT first_name, last_name, salary, AVG(salary) OVER() AS company_avg
+	FROM employees
+) AS avg_table WHERE salary > company_avg;
+
+#exercise 3
+SELECT first_name, last_name, d.dept_name
+FROM employees e
+INNER JOIN departments d
+ON e.dept_id = d.dept_id 
+WHERE d.dept_name IN (
+					SELECT dept_name
+                    FROM departments
+                    WHERE location = 'New York'
+                    );
+
+SELECT 
+	first_name,
+    last_name,
+	(SELECT dept_name FROM departments WHERE location = 'New York')
+FROM employees 
+WHERE dept_id IN (
+				SELECT dept_id
+                FROM departments 
+                WHERE location = 'New York'
+);
