@@ -2149,9 +2149,94 @@ FROM (
 	
 #exercise 9 
 SELECT first_name, last_name, email
-FROM employees
-	SELECT 
-		SUBSTRING(email, POSITION('@' IN email) + 1) AS domains,
-		COUNT(SUBSTRING(email, POSITION('@' IN email) + 1)) AS most_common_email
+FROM employees 
+WHERE SUBSTRING(email, POSITION('@' IN email) + 1) = (
+    SELECT 
+		SUBSTRING(email, POSITION( '@' IN email) + 1) AS domains
+	FROM employees 
+	GROUP BY SUBSTRING(email, POSITION( '@' IN email) + 1)
+	ORDER BY COUNT(*) DESC
+	LIMIT 1
+);
+
+SELECT e.first_name, e.last_name, e.email
+FROM employees e 
+INNER JOIN (
+	SELECT SUBSTRING_INDEX(email, '@', -1) AS domain
 	FROM employees
-	GROUP BY SUBSTRING(email, POSITION('@' IN email) + 1)
+	GROUP BY SUBSTRING_INDEX(email, '@', -1) 
+	ORDER BY COUNT(*) DESC
+	LIMIT 1
+) AS most_common ON SUBSTRING_INDEX(e.email, '@', -1) = most_common.domain;
+
+SELECT e.first_name, e.last_name, e.email
+FROM employees e 
+INNER JOIN (
+	SELECT 
+		SUBSTRING_INDEX(email, '@', -1) AS domain,
+		COUNT(*) OVER (ORDER BY COUNT(*) DESC) AS ranks
+	FROM employees
+	GROUP BY SUBSTRING_INDEX(email, '@', -1)
+) AS most_common ON SUBSTRING_INDEX(e.email, '@', -1) = most_common.domain
+ AND most_common.ranks = 1;
+ 
+ #exercise 10
+ SELECT 
+	o.order_id,
+    o.order_date,
+    o.amount,
+    c.customer_name
+FROM orders o
+LEFT JOIN customers c 
+	ON o.customer_id = c.customer_id
+INNER JOIN (
+	SELECT DATE_FORMAT(order_date, '%Y-%m') AS most_recent_order
+	FROM orders
+	ORDER BY DATE_FORMAT(order_date, '%Y-%m') DESC
+    LIMIT 1
+	) AS most_recent 
+ON DATE_FORMAT(o.order_date, '%Y-%m') = most_recent.most_recent_order;
+#this is prone to issues and is very fragile so heres another solution that is also much cleaner
+# refer to internet to remember why this was a wrong approach, might be helpful
+SELECT o.order_id, o.order_date, o.amount, c.customer_name
+FROM orders o
+LEFT JOIN customers c 
+	ON o.customer_id = c.customer_id
+WHERE DATE_FORMAT(o.order_date, '%Y-%m') = (
+	SELECT DATE_FORMAT(MAX(order_date), '%Y-%m')
+    FROM orders 
+);
+
+#exercise 11
+SELECT 
+	e.first_name,
+    e.last_name,
+    d.dept_name,
+    e.salary
+FROM employees e 
+INNER JOIN departments d
+	ON e.dept_id = d.dept_id
+WHERE d.budget > (
+	SELECT AVG(budget)
+    FROM departments)
+AND e.salary > (
+	SELECT AVG(salary)
+    FROM employees);
+    
+SELECT
+	e.first_name,
+    e.last_name,
+    aab.dept_name,
+    aas.salary
+FROM employees e
+INNER JOIN (
+	SELECT dept_id, dept_name, budget 
+    FROM departments
+    WHERE budget > (SELECT AVG(budget) FROM departments)
+) AS aab ON e.dept_id = aab.dept_id
+INNER JOIN (
+	SELECT emp_id, salary
+	FROM employees
+    WHERE salary > (SELECT AVG(salary) FROM employees)
+) AS aas ON e.salary = aas.salary;
+
