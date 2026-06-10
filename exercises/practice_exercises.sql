@@ -2147,4 +2147,11 @@ FROM (
 		ON e.dept_id = d.dept_id
 	) AS ranks WHERE rnk = 1;
 	
-#exercise 9
+#exercise 9 
+SELECT first_name, last_name, email
+FROM employees
+	SELECT 
+		SUBSTRING(email, POSITION('@' IN email) + 1) AS domains,
+		COUNT(SUBSTRING(email, POSITION('@' IN email) + 1)) AS most_common_email
+	FROM employees
+	GROUP BY SUBSTRING(email, POSITION('@' IN email) + 1)
