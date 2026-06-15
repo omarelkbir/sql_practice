@@ -838,4 +838,14 @@ WHERE NOT EXISTS (
 			WHERE country = 'Germany' AND c.customerid = o.customerid
 			);
 
-    
+#CTE TASKS
+WITH total_sales_per_customer AS (
+	SELECT 
+		customerid,
+        SUM(sales) AS total_sales
+	FROM orders
+    GROUP BY customerid
+)
+SELECT customerid, total_sales
+FROM total_sales_per_customer;
+

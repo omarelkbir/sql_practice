@@ -206,3 +206,5 @@ SHOW CREATE TABLE salesdb.orders;        -- Full CREATE TABLE statement
 #exercise from now on, i will solve it with all the methods possible, wether subqueries
 #window functions or regular sql. its to hone my skills and not forget something while 
 #learning something else, for example i forgot a lot abt window functions
+
+
