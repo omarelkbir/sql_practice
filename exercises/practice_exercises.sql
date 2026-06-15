@@ -2240,3 +2240,132 @@ INNER JOIN (
     WHERE salary > (SELECT AVG(salary) FROM employees)
 ) AS aas ON e.salary = aas.salary;
 
+#SUBQUERY EXERCISES AGAIN
+#EX1
+SELECT first_name, last_name, salary
+FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);
+
+SELECT first_name, last_name, salary
+FROM (
+	SELECT
+		*,
+		AVG(salary) OVER() AS avg_salary
+	FROM employees
+) AS avs
+WHERE salary > avg_salary;
+
+#EX2
+SELECT 
+	first_name, 
+    last_name, 
+    salary, 
+    (SELECT AVG(salary) FROM employees) AS company_avg
+FROM employees;
+
+#EX3
+SELECT e.first_name, e.last_name, d.dept_name
+FROM employees e
+INNER JOIN departments d
+	ON e.dept_id = d.dept_id
+WHERE e.dept_id IN (
+	SELECT dept_id
+    FROM departments 
+    WHERE location = 'New York'
+);
+
+#EX4
+SELECT customer_id 
+FROM customers
+WHERE customer_id NOT IN (
+	SELECT customer_id 
+    FROM orders
+);
+
+#EX5
+SELECT d.dept_name
+FROM departments d
+WHERE EXISTS (
+	SELECT 1
+    FROM employees e
+    WHERE e.salary > 90000
+    AND e.dept_id = d.dept_id
+);
+
+#EX6
+SELECT dept_name, total_payroll
+FROM (
+	SELECT d.dept_name, SUM(e.salary) AS total_payroll
+    FROM employees e
+    INNER JOIN departments d
+		ON e.dept_id = d.dept_id
+    GROUP BY d.dept_name
+	) AS salaries
+WHERE total_payroll > (
+	SELECT AVG(total_payroll)
+    FROM (
+		SELECT SUM(salary) AS total_payroll
+		FROM employees
+		GROUP BY dept_id
+		) AS avg_total_payroll
+	);
+
+SELECT dept_name, total_payroll
+FROM (
+	SELECT 
+		d.dept_name,
+        SUM(e.salary) AS total_payroll,
+        AVG(SUM(e.salary)) OVER() AS avg_total_payroll
+	FROM employees e
+    INNER JOIN departments d
+    ON e.dept_id = d.dept_id
+    GROUP BY d.dept_id, d.dept_name
+    ) AS dept_total
+WHERE total_payroll > avg_total_payroll;
+
+#EX7
+SELECT d.dept_name, AVG(e.salary) AS dept_avg
+FROM employees e
+INNER JOIN departments d
+ON e.dept_id = d.dept_id
+GROUP BY e.dept_id
+HAVING dept_avg > (
+	SELECT AVG(salary)
+    FROM employees
+);
+
+SELECT dept_name, dept_avg
+FROM (
+	SELECT 
+		d.dept_name,
+		AVG(e.salary) OVER(PARTITION BY e.dept_id) AS dept_avg
+	FROM employees e
+	INNER JOIN departments d
+	ON e.dept_id = d.dept_id
+) AS dept_salaries WHERE dept_avg > (SELECT AVG(salary) FROM employees);
+
+#EX8
+SELECT e.first_name, e.last_name, d.dept_name, e.salary
+FROM employees e
+INNER JOIN departments d 
+ON e.dept_id = d.dept_id
+WHERE salary = (
+	SELECT MAX(salary)
+    FROM employees e1
+    WHERE e.dept_id = e1.dept_id
+);
+
+SELECT first_name, last_name, dept_name, salary
+FROM (
+	SELECT 
+		e.first_name,
+		e.last_name,
+		d.dept_name,
+        e.salary,
+		max(e.salary) OVER(PARTITION BY e.dept_id) AS max_salary
+	FROM employees e
+	INNER JOIN departments d
+	ON e.dept_id = d.dept_id
+	) AS ms 
+WHERE salary = max_salary; 
+
