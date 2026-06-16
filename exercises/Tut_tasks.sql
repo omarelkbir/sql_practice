@@ -845,7 +845,73 @@ WITH total_sales_per_customer AS (
         SUM(sales) AS total_sales
 	FROM orders
     GROUP BY customerid
+),
+last_order_date AS (
+	SELECT 
+		customerid,
+        MAX(orderdate) AS most_recent_order
+	FROM orders
+    GROUP BY customerid
+),
+customer_rankings AS (
+	SELECT 
+		customerid,
+        total_sales,
+        RANK() OVER(ORDER BY total_sales DESC) AS rnk
+	FROM total_sales_per_customer
+),
+customer_segments AS (
+	SELECT 
+		customerid,
+        total_sales,
+		CASE 
+			WHEN total_sales >= 100 THEN 'High'
+            WHEN total_sales >= 50 THEN 'Medium'
+			ELSE 'Low'
+		END AS segments
+	FROM total_sales_per_customer
 )
-SELECT customerid, total_sales
-FROM total_sales_per_customer;
+SELECT customerid, total_sales, segments
+FROM customer_segments
+ORDER BY segments;
 
+#RECURSIVE CTE
+WITH RECURSIVE num_generator AS (
+	SELECT 
+		1 AS anchor_level
+	UNION ALL
+    SELECT 
+		anchor_level + 1
+	FROM num_generator
+    WHERE anchor_level < 20
+)
+SELECT anchor_level
+FROM num_generator;
+		
+WITH RECURSIVE emp_hierarchy AS (
+	SELECT 
+		employeeid,
+		firstname,
+        lastname,
+        managerid,
+        1 AS anchor_level
+	FROM employees 
+    WHERE managerid IS NULL
+    UNION 
+    SELECT
+		e.employeeid,
+		e.firstname,
+        e.lastname,
+        e.managerid,
+		anchor_level + 1
+	FROM employees e
+    INNER JOIN emp_hierarchy eh
+    ON e.managerid = eh.employeeid
+)
+SELECT 
+	employeeid,
+    firstname,
+    lastname,
+    managerid,
+    anchor_level
+FROM emp_hierarchy;

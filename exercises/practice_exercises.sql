@@ -2369,3 +2369,335 @@ FROM (
 	) AS ms 
 WHERE salary = max_salary; 
 
+#CTE's EXERCISES
+#EX1
+WITH company_stats AS (
+	SELECT 
+        AVG(salary) AS avg_salary
+	FROM employees
+    
+)
+SELECT 
+	first_name,
+    last_name,
+    salary
+FROM employees 
+WHERE salary > (
+	SELECT avg_salary
+    FROM company_stats
+);
+
+WITH company_payroll AS (
+	SELECT 
+		d.dept_name,
+        SUM(e.salary) AS total_payroll
+	FROM employees e
+    INNER JOIN departments d ON e.dept_id = d.dept_id
+    GROUP BY d.dept_id, d.dept_name
+),
+max_payroll AS (
+	SELECT 
+		MAX(total_payroll) AS max_total
+	FROM company_payroll
+)
+
+SELECT 
+	cp.dept_name,
+    mp.max_total
+FROM company_payroll cp
+CROSS JOIN max_payroll mp
+WHERE cp.total_payroll = mp.max_total;
+
+
+WITH dept_total AS (
+	SELECT
+		d.dept_name,
+        SUM(e.salary) AS total_payroll,
+        RANK() OVER(ORDER BY SUM(e.salary) DESC) AS rnk
+	FROM employees e
+    INNER JOIN departments d ON e.dept_id = d.dept_id
+    GROUP BY d.dept_id, d.dept_name
+)
+SELECT
+	dept_name,
+    total_payroll
+FROM dept_total
+WHERE rnk = 1;
+
+WITH domain_counts AS (
+	SELECT
+        SUBSTRING_INDEX(email, '@', -1) AS domain,
+        COUNT(*) AS domain_count
+	FROM employees
+    GROUP BY SUBSTRING_INDEX(email, '@', -1)
+),
+top_domain AS (
+	SELECT domain
+	FROM domain_counts
+    ORDER BY domain_count DESC
+	LIMIT 1
+)
+SELECT 
+	e.first_name,
+    e.last_name,
+    e.email
+FROM employees e
+WHERE SUBSTRING_INDEX(email, '@', -1) = (SELECT domain FROM top_domain);
+
+WITH customer_orders AS (
+	SELECT customer_id
+	FROM orders
+)
+SELECT c.customer_id
+FROM customers c
+WHERE NOT EXISTS (
+	SELECT 1
+    FROM customer_orders co
+    WHERE c.customer_id = co.customer_id
+    );
+#or use left join instead of not exists
+
+WITH employees_2022_above AS (
+	SELECT
+		dept_id,
+		first_name,
+        last_name,
+        hire_date
+	FROM employees
+    WHERE hire_date >= '2022-01-01'
+),
+dept_before_2019 AS (
+	SELECT 
+		dept_id,
+		dept_name,
+        established_date 
+	FROM departments
+	WHERE established_date < '2019-01-01'
+)
+SELECT 
+	e.first_name,
+    e.last_name,
+    e.hire_date,
+	d.dept_name,
+    d.established_date
+FROM employees_2022_above AS e
+INNER JOIN dept_before_2019 AS d
+ON e.dept_id = d.dept_id;
+
+#EX6
+WITH top_earners AS (
+	SELECT
+		dept_id,
+		first_name,
+        last_name,
+        salary,
+        RANK() OVER(PARTITION BY dept_id ORDER BY salary DESC) AS rnk
+	FROM employees
+)
+SELECT
+	d.dept_name,
+    te.first_name,
+	te.last_name,
+	te.salary,
+    te.rnk
+FROM top_earners te
+INNER JOIN departments d ON te.dept_id = d.dept_id
+WHERE rnk <= 2;
+
+WITH month_over_month AS (
+	SELECT
+		DATE_FORMAT(order_date, '%Y-%m') AS month,
+        SUM(amount) AS revenue
+	FROM orders
+    WHERE YEAR(order_date) = '2024'
+    GROUP BY DATE_FORMAT(order_date, '%Y-%m')
+)
+SELECT 
+	month,
+    revenue,
+    LAG(revenue) OVER(ORDER BY month) AS prev_month_revenue,
+    revenue - LAG(revenue) OVER(ORDER BY month) AS change_amount
+FROM month_over_month;
+
+#EX8
+WITH dept_avg_and_counts AS (
+	SELECT
+		dept_id,
+        AVG(salary) AS dept_avg_salary,
+        COUNT(*) AS headcount
+	FROM employees
+    GROUP BY dept_id
+)
+SELECT 
+	d.dept_name,
+    ac.dept_avg_salary,
+    ac.headcount
+FROM departments d
+INNER JOIN dept_avg_and_counts ac
+ON d.dept_id = ac.dept_id
+WHERE ac.dept_avg_salary > (SELECT AVG(salary) FROM employees)
+	AND ac.headcount > 2;
+
+#EX9
+WITH dept_salary AS (
+	SELECT
+		dept_id,
+		first_name,
+        last_name,
+        salary,
+        MAX(salary) OVER(PARTITION BY dept_id) AS dept_max_salary
+	FROM employees
+)
+SELECT
+	ds.first_name,
+    ds.last_name,
+    d.dept_name,
+    ds.salary,
+    ds.dept_max_salary
+FROM dept_salary ds
+INNER JOIN departments d ON ds.dept_id = d.dept_id
+WHERE ds.salary > ds.dept_max_salary * 0.90;
+
+#EX10
+WITH all_employees AS (
+    SELECT 
+        emp_id,
+        first_name,
+        last_name,
+        salary,
+        manager_id
+    FROM employees
+)
+SELECT 
+    m.first_name AS manager_name,
+    m.last_name AS manager_last,
+    m.salary AS manager_salary,
+    e.first_name AS employee_name,
+    e.last_name AS employee_last,
+    e.salary AS employee_salary
+FROM all_employees m
+JOIN all_employees e ON m.emp_id = e.manager_id
+WHERE e.salary > m.salary;
+
+#EX11
+WITH RECURSIVE number_series AS (
+	SELECT 
+		'2024-01-01' AS dt
+	UNION
+	SELECT 
+		dt + INTERVAL 1 DAY #or dt + DATE_ADD(dt, INTERVAL 1 DAY)
+	FROM number_series
+	WHERE dt < '2024-01-15'
+)	
+SELECT dt FROM 	number_series;
+
+#EX12
+WITH RECURSIVE emp_hierarchy AS (
+	SELECT 
+		emp_id,
+        first_name,
+        last_name,
+        manager_id,
+        0 AS level
+	FROM employees 
+    WHERE emp_id = 101
+    UNION ALL
+    SELECT
+		e.emp_id,
+        e.first_name,
+        e.last_name,
+        e.manager_id,
+        level + 1
+	FROM employees e
+    INNER JOIN emp_hierarchy eh ON e.manager_id = eh.emp_id
+)
+SELECT emp_id, first_name, last_name, manager_id, level
+FROM emp_hierarchy;
+
+#EX13
+WITH lifetime_amount AS (
+	SELECT 
+		customer_id,
+        SUM(amount) AS total_spent
+	FROM orders
+    GROUP BY customer_id
+),
+percentile AS (
+	SELECT
+		customer_id,
+		total_spent,
+		NTILE(4) OVER(ORDER BY total_spent DESC) AS customer_percentile
+	FROM lifetime_amount
+)
+SELECT 
+	c.customer_name,
+    p.total_spent,
+    p.customer_percentile
+FROM customers c
+INNER JOIN percentile p ON c.customer_id = p.customer_id
+WHERE p.customer_percentile = 1;
+    
+#EX14
+WITH dept_stats AS (
+	SELECT
+		e.dept_id,
+        d.dept_name,
+        MAX(e.salary) AS highest_salary,
+        AVG(e.salary) AS dept_avg
+	FROM employees e
+    INNER JOIN departments d ON e.dept_id = d.dept_id
+    GROUP BY e.dept_id, d.dept_name
+)
+SELECT 
+	dept_name,
+    highest_salary,
+    dept_avg,
+    highest_salary - dept_avg AS difference
+FROM dept_stats;
+
+#EX15
+WITH avg_dept_budget AS (
+	SELECT
+		dept_id,
+        AVG(budget) AS avg_budget
+	FROM departments
+    GROUP BY dept_id
+),
+emp_in_budget_departments AS (
+	SELECT
+		e.dept_id,
+		e.emp_id,
+        e.first_name,
+        e.salary AS current_salary
+	FROM employees e
+    INNER JOIN avg_dept_budget adb 
+    ON e.dept_id = adb.dept_id AND adb.avg_budget > (SELECT AVG(budget) FROM departments)
+)
+SELECT 
+	emp_id,
+    first_name,
+    current_salary,
+    current_salary * 0.15 AS proposed_new_salary
+FROM emp_in_budget_departments;
+#this is close and works but has a conceptual error, here is the cleaner correct code
+# that AI provided after looking at my code
+
+WITH overall_avg_budget AS (
+    -- Step 1: One single average across all departments
+    SELECT AVG(budget) AS avg_budget
+    FROM departments
+),
+high_budget_depts AS (
+    -- Step 2: Departments above that average
+    SELECT dept_id, budget
+    FROM departments
+    WHERE budget > (SELECT avg_budget FROM overall_avg_budget)
+)
+-- Step 3 & 4: Employees in those departments, with proposed raise
+SELECT 
+    e.emp_id,
+    e.first_name,
+    e.salary AS current_salary,
+    e.salary * 1.15 AS proposed_new_salary
+FROM employees e
+INNER JOIN high_budget_depts hbd ON e.dept_id = hbd.dept_id;
