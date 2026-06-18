@@ -915,3 +915,18 @@ SELECT
     managerid,
     anchor_level
 FROM emp_hierarchy;
+
+#VIEWS 
+CREATE OR REPLACE VIEW sales.monthly_running_total AS ( #sales. is like a schema of where this view belongs, which is salesdb database
+	SELECT
+		DATE_FORMAT(MIN(orderdate), '%M %Y') AS month,
+        SUM(sales) AS month_total,
+        SUM(SUM(sales)) OVER(ORDER BY MIN(orderdate)) AS running_total
+	FROM orders
+    GROUP BY DATE_FORMAT(orderdate, '%Y-%m') 
+);
+DROP VIEW monthly_running_total;
+SELECT * FROM monthly_running_total;
+
+
+
