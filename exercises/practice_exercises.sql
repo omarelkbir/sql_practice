@@ -2701,3 +2701,786 @@ SELECT
     e.salary * 1.15 AS proposed_new_salary
 FROM employees e
 INNER JOIN high_budget_depts hbd ON e.dept_id = hbd.dept_id;
+
+#VIEWS AND TEMP TABLES
+CREATE VIEW high_earners AS (
+	SELECT 
+		first_name,
+		last_name,
+		salary,
+		dept_id
+	FROM employees
+	WHERE salary > (SELECT AVG(salary) FROM employees)
+);
+SELECT 
+	dept_id,
+    COUNT(*) AS high_earners_count
+FROM high_earners
+GROUP BY dept_id;
+
+#EX2
+CREATE OR REPLACE VIEW order_details AS (
+	SELECT 
+		o.order_id,
+        o.order_date,
+        o.amount,
+        c.customer_name,
+        c.city,
+		CONCAT(e.first_name, ' ', e.last_name) AS sales_rep_name,
+        d.dept_name
+	FROM orders o 
+    INNER JOIN employees e
+		ON o.emp_id = e.emp_id
+	INNER JOIN customers c 
+		ON o.customer_id = c.customer_id
+	INNER JOIN departments d 
+		ON e.dept_id = d.dept_id
+); # WE PREFER INNER FOR REPORTING, LEFT FOR COMPLETE DATA FOR CHECKING. U DONT WANT EXECS SEEING NULLS IN THIER DASHBOARD OR EXCEL
+SELECT * FROM order_details;
+SELECT 
+	dept_name,
+    SUM(amount) AS total_revenue
+FROM order_details
+WHERE order_date > '2024-02-28' AND order_date < '2024-04-01'
+GROUP BY dept_name;
+
+#EX3
+CREATE OR REPLACE VIEW employee_public AS (
+	SELECT
+		e.emp_id,
+        e.first_name,
+        e.last_name,
+        e.hire_date,
+        d.dept_name
+	FROM employees e
+    INNER JOIN departments d
+		ON e.dept_id = d.dept_id
+);
+SELECT * FROM employee_public;
+
+#EX1 TEMP TABLES
+CREATE TEMPORARY TABLE temp_q1_sales AS
+SELECT 
+    c.customer_id,
+    c.customer_name,
+    SUM(o.amount) AS total_revenue,
+    COUNT(*) AS order_count
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+WHERE o.order_date >= '2024-01-01' AND o.order_date < '2024-04-01'
+GROUP BY c.customer_id, c.customer_name;
+
+#set the output of a temp table query to a variable so we dont open the temp table twice 
+#or more in 1 query bc that will cause an error, tem tables can only be opened 1 time 
+#in a query!!!
+SET @avg_revenue = (SELECT AVG(total_revenue) FROM temp_q1_sales);
+
+SELECT customer_name, total_revenue
+FROM temp_q1_sales
+WHERE total_revenue > @avg_revenue;
+#apparently cant open the temp table twice in a query,
+#the workaround (self-join, variable, or two temp tables).
+# i used variable above bc i wanna learn it and its simplest here.
+
+CREATE DATABASE revision3;
+-- ============================================================
+-- 1. CUSTOMERS
+-- ============================================================
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    country VARCHAR(50),
+    signup_date DATE,
+    is_active TINYINT(1),
+    tier VARCHAR(20) -- 'bronze', 'silver', 'gold', 'platinum'
+);
+
+INSERT INTO customers VALUES
+(1, 'Alice Johnson', 'alice@email.com', '+1-555-0101', 'USA', '2022-03-15', 1, 'gold'),
+(2, 'Bob Smith', NULL, '+1-555-0102', 'USA', '2023-01-10', 1, 'silver'),
+(3, 'Carol White', 'carol@email.com', NULL, 'UK', '2023-06-20', 1, 'bronze'),
+(4, 'David Brown', 'david@email.com', '+44-555-0103', 'UK', '2021-11-05', 0, 'silver'),
+(5, 'Eva Green', 'eva@email.com', '+1-555-0104', 'Canada', '2023-09-01', 1, 'gold'),
+(6, 'Frank Black', NULL, NULL, 'Germany', '2022-07-22', 1, 'bronze'),
+(7, 'Grace Lee', 'grace@email.com', '+49-555-0105', 'Germany', '2023-02-14', 1, 'platinum'),
+(8, 'Henry Wilson', 'henry@email.com', '+1-555-0106', 'USA', '2020-05-30', 0, 'silver'),
+(9, 'Ivy Chen', 'ivy@email.com', '+86-555-0107', 'China', '2023-04-18', 1, 'bronze'),
+(10, 'Jack Taylor', 'jack@email.com', '+44-555-0108', 'UK', '2023-08-25', 1, 'gold'),
+(11, 'Karen Martinez', 'karen@email.com', '+1-555-0109', 'USA', '2023-10-05', 1, 'silver'),
+(12, 'Leo Anderson', NULL, '+46-555-0110', 'Sweden', '2022-12-01', 1, 'bronze'),
+(13, 'Mia Thompson', 'mia@email.com', '+1-555-0111', 'Canada', '2023-07-12', 0, 'gold'),
+(14, 'Noah Garcia', 'noah@email.com', '+34-555-0112', 'Spain', '2023-03-08', 1, 'silver'),
+(15, 'Olivia Rodriguez', 'olivia@email.com', '+1-555-0113', 'USA', '2023-11-20', 1, 'platinum');
+
+-- ============================================================
+-- 2. ORDERS
+-- ============================================================
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    order_date DATE,
+    amount DECIMAL(10,2),
+    status VARCHAR(20), -- 'completed', 'pending', 'cancelled', 'refunded'
+    shipping_country VARCHAR(50)
+);
+
+INSERT INTO orders VALUES
+(101, 1, '2023-01-15', 250.00, 'completed', 'USA'),
+(102, 1, '2023-03-22', 180.50, 'completed', 'USA'),
+(103, 2, '2023-02-10', 99.99, 'pending', 'USA'),
+(104, 3, '2023-06-25', 450.00, 'completed', 'UK'),
+(105, 4, '2023-01-05', 1200.00, 'cancelled', 'UK'),
+(106, 5, '2023-09-10', 75.00, 'completed', 'Canada'),
+(107, 7, '2023-02-20', 3200.00, 'completed', 'Germany'),
+(108, 7, '2023-05-15', 890.00, 'completed', 'Germany'),
+(109, 9, '2023-04-20', 55.00, 'pending', 'China'),
+(110, 10, '2023-08-28', 670.00, 'completed', 'UK'),
+(111, 11, '2023-10-10', 230.00, 'completed', 'USA'),
+(112, 11, '2023-10-12', 150.00, 'refunded', 'USA'),
+(113, 13, '2023-07-15', 500.00, 'cancelled', 'Canada'),
+(114, 14, '2023-03-12', 89.00, 'completed', 'Spain'),
+(115, 15, '2023-11-22', 1200.00, 'completed', 'USA'),
+(116, 1, '2023-12-01', 340.00, 'pending', 'USA'),
+(117, 5, '2023-12-05', 199.00, 'completed', 'Canada'),
+(118, 7, '2023-12-10', 4500.00, 'completed', 'Germany'),
+(119, 2, '2023-12-15', 45.00, 'cancelled', 'USA'),
+(120, 10, '2023-12-20', 780.00, 'completed', 'UK');
+
+-- ============================================================
+-- 3. ORDER_ITEMS
+-- ============================================================
+CREATE TABLE order_items (
+    item_id INT PRIMARY KEY,
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    unit_price DECIMAL(10,2)
+);
+
+INSERT INTO order_items VALUES
+(1, 101, 1, 2, 125.00),
+(2, 101, 3, 1, 0.00),
+(3, 102, 2, 1, 180.50),
+(4, 103, 4, 1, 99.99),
+(5, 104, 5, 3, 150.00),
+(6, 105, 6, 2, 600.00),
+(7, 106, 7, 1, 75.00),
+(8, 107, 8, 1, 3200.00),
+(9, 108, 9, 2, 445.00),
+(10, 109, 10, 1, 55.00),
+(11, 110, 1, 2, 125.00),
+(12, 110, 5, 1, 150.00),
+(13, 110, 11, 1, 295.00),
+(14, 111, 2, 1, 180.50),
+(15, 111, 12, 1, 49.50),
+(16, 112, 13, 1, 150.00),
+(17, 113, 14, 5, 100.00),
+(18, 114, 15, 1, 89.00),
+(19, 115, 8, 1, 1200.00),
+(20, 116, 1, 2, 125.00),
+(21, 116, 16, 1, 90.00),
+(22, 117, 17, 1, 199.00),
+(23, 118, 8, 1, 4500.00),
+(24, 119, 4, 1, 45.00),
+(25, 120, 5, 2, 150.00),
+(26, 120, 18, 1, 480.00);
+
+-- ============================================================
+-- 4. PRODUCTS
+-- ============================================================
+CREATE TABLE products (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(200),
+    category VARCHAR(50),
+    description TEXT,
+    base_price DECIMAL(10,2),
+    is_discontinued TINYINT(1)
+);
+
+INSERT INTO products VALUES
+(1, 'Aero Wireless Headphones', 'Electronics', 'Premium wireless headphones with active noise cancellation and 30-hour battery life. Includes 2-year warranty.', 125.00, 0),
+(2, 'Ergo Office Chair', 'Furniture', 'Ergonomic mesh office chair with lumbar support and adjustable armrests.', 180.50, 0),
+(3, 'USB-C Cable 2m', 'Accessories', 'Braided USB-C to USB-C cable, 2 meters, supports fast charging.', 12.99, 0),
+(4, 'Basic Mouse Pad', 'Accessories', 'Standard cloth mouse pad, 25x30cm. No warranty included.', 9.99, 0),
+(5, 'LED Desk Lamp', 'Electronics', 'Adjustable LED desk lamp with touch controls and USB charging port.', 150.00, 0),
+(6, 'UltraWide Monitor 34"', 'Electronics', '34-inch curved ultrawide monitor, 144Hz, 1ms response. 3-year warranty included.', 600.00, 0),
+(7, 'Organic Cotton T-Shirt', 'Apparel', '100% organic cotton, sustainably sourced. Available in multiple colors.', 25.00, 0),
+(8, 'Pro Laptop Stand', 'Electronics', 'Aluminum laptop stand, adjustable height, compatible with all laptops up to 17".', 45.00, 0),
+(9, 'Mechanical Keyboard', 'Electronics', 'Cherry MX switches, RGB backlight, programmable keys. 1-year warranty.', 445.00, 0),
+(10, 'Eco Water Bottle', 'Accessories', 'BPA-free stainless steel water bottle, 750ml, keeps drinks cold 24h.', 22.00, 0),
+(11, 'Noise Cancelling Earbuds', 'Electronics', 'True wireless earbuds with ANC and transparency mode.', 295.00, 0),
+(12, 'Phone Grip Stand', 'Accessories', 'Collapsible phone grip and stand, universal compatibility.', 12.50, 0),
+(13, 'Smart Watch Band', 'Accessories', 'Silicone replacement band for smart watches, multiple sizes.', 19.99, 0),
+(14, 'Portable SSD 1TB', 'Electronics', 'External SSD, 1TB, USB 3.2 Gen 2, up to 1050MB/s read speed. 5-year warranty.', 100.00, 0),
+(15, 'Blue Light Glasses', 'Apparel', 'Computer glasses with blue light filtering lenses.', 35.00, 0),
+(16, 'Cable Management Box', 'Accessories', 'Bamboo cable organizer box, hides power strips and cables.', 24.99, 0),
+(17, 'Webcam 4K', 'Electronics', '4K webcam with auto-focus and built-in microphone. 2-year warranty.', 199.00, 0),
+(18, 'Standing Desk Converter', 'Furniture', 'Adjustable standing desk converter, 37" wide, no assembly required.', 480.00, 0),
+(19, 'Ivy Smart Thermostat', 'Electronics', 'WiFi-enabled smart thermostat with app control. 2-year warranty.', 249.00, 1),
+(20, 'Vintage Wall Clock', 'Decor', 'Minimalist wall clock, silent movement, 12-inch diameter.', 34.99, 1);
+
+-- ============================================================
+-- 5. DEPARTMENTS
+-- ============================================================
+CREATE TABLE departments (
+    dept_name VARCHAR(50) PRIMARY KEY,
+    budget DECIMAL(12,2),
+    location VARCHAR(50),
+    head_count INT
+);
+
+INSERT INTO departments VALUES
+('Engineering', 2500000.00, 'New York', 45),
+('Sales', 1800000.00, 'London', 32),
+('Marketing', 1200000.00, 'New York', 28),
+('HR', 600000.00, 'London', 12),
+('Finance', 1500000.00, 'Singapore', 20),
+('Operations', 900000.00, 'Berlin', 18),
+('Product', 1100000.00, 'New York', 22),
+('Customer Success', 700000.00, 'London', 25);
+
+-- ============================================================
+-- 6. EMPLOYEES
+-- ============================================================
+CREATE TABLE employees (
+    employee_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    department VARCHAR(50),
+    salary DECIMAL(10,2),
+    hire_date DATE,
+    manager_id INT,
+    is_full_time TINYINT(1)
+);
+
+INSERT INTO employees VALUES
+(1, 'Sarah Connor', 'Engineering', 145000.00, '2019-03-15', NULL, 1),
+(2, 'John Reese', 'Engineering', 125000.00, '2020-06-01', 1, 1),
+(3, 'Harold Finch', 'Engineering', 155000.00, '2018-01-10', 1, 1),
+(4, 'Joss Carter', 'Sales', 95000.00, '2021-02-20', 5, 1),
+(5, 'Lionel Fusco', 'Sales', 110000.00, '2020-08-15', NULL, 1),
+(6, 'Sameen Shaw', 'Engineering', 135000.00, '2020-11-30', 1, 0),
+(7, 'Root', 'Marketing', 88000.00, '2022-04-10', 8, 1),
+(8, 'Zoe Morgan', 'Marketing', 102000.00, '2019-09-01', NULL, 1),
+(9, 'Carl Elias', 'Finance', 118000.00, '2020-03-22', 12, 1),
+(10, 'Anthony Marconi', 'Finance', 92000.00, '2021-07-18', 12, 1),
+(11, 'Donnelly', 'HR', 78000.00, '2022-01-05', 14, 1),
+(12, 'Terrence King', 'Finance', 135000.00, '2018-06-15', NULL, 1),
+(13, 'Hersh', 'Operations', 85000.00, '2021-10-12', 15, 1),
+(14, 'Control', 'HR', 95000.00, '2019-12-01', NULL, 1),
+(15, 'Greer', 'Operations', 105000.00, '2018-04-20', NULL, 1),
+(16, 'Shaw (Contractor)', 'Engineering', 75000.00, '2023-01-15', 3, 0),
+(17, 'Bear', 'Product', 65000.00, '2022-08-01', 18, 1),
+(18, 'Nathan Ingram', 'Product', 128000.00, '2017-11-10', NULL, 1),
+(19, 'Grace Hendricks', 'Customer Success', 82000.00, '2021-05-20', 20, 1),
+(20, 'Danielle', 'Customer Success', 98000.00, '2020-02-14', NULL, 1);
+
+-- ============================================================
+-- 7. EMPLOYEE_HIERARCHY (self-referencing)
+-- ============================================================
+CREATE TABLE employee_hierarchy (
+    employee_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    manager_id INT,
+    salary DECIMAL(10,2),
+    level INT
+);
+
+INSERT INTO employee_hierarchy VALUES
+(1, 'CEO Alice', NULL, 300000.00, 1),
+(2, 'CTO Bob', 1, 200000.00, 2),
+(3, 'CFO Carol', 1, 190000.00, 2),
+(4, 'VP Engineering Dave', 2, 160000.00, 3),
+(5, 'VP Product Eve', 2, 150000.00, 3),
+(6, 'Senior Dev Frank', 4, 130000.00, 4),
+(7, 'Senior Dev Grace', 4, 135000.00, 4),
+(8, 'Dev Henry', 6, 95000.00, 5),
+(9, 'Dev Ivy', 6, 92000.00, 5),
+(10, 'Dev Jack', 7, 98000.00, 5),
+(11, 'Junior Dev Karen', 8, 65000.00, 6),
+(12, 'Junior Dev Leo', 9, 62000.00, 6),
+(13, 'Product Manager Mia', 5, 110000.00, 4),
+(14, 'Analyst Noah', 3, 105000.00, 3),
+(15, 'Accountant Olivia', 3, 88000.00, 4);
+
+-- ============================================================
+-- 8. WAREHOUSES
+-- ============================================================
+CREATE TABLE warehouses (
+    warehouse_id INT PRIMARY KEY,
+    city VARCHAR(50),
+    country VARCHAR(50),
+    capacity INT
+);
+
+INSERT INTO warehouses VALUES
+(1, 'New York', 'USA', 50000),
+(2, 'Los Angeles', 'USA', 35000),
+(3, 'London', 'UK', 40000),
+(4, 'Berlin', 'Germany', 30000),
+(5, 'Madrid', 'Spain', 25000),
+(6, 'Amsterdam', 'Netherlands', 20000),
+(7, 'Milan', 'Italy', 22000),
+(8, 'Toronto', 'Canada', 28000);
+
+-- ============================================================
+-- 9. INVENTORY
+-- ============================================================
+CREATE TABLE inventory (
+    inventory_id INT PRIMARY KEY,
+    product_id INT,
+    warehouse_id INT,
+    quantity INT,
+    last_updated DATE
+);
+
+INSERT INTO inventory VALUES
+(1, 1, 1, 150, '2023-12-01'),
+(2, 1, 2, 80, '2023-11-15'),
+(3, 2, 1, 45, '2023-12-05'),
+(4, 2, 3, 30, '2023-10-20'),
+(5, 3, 1, 500, '2023-12-10'),
+(6, 3, 4, 0, '2023-09-01'),
+(7, 4, 2, 200, '2023-11-30'),
+(8, 5, 3, 75, '2023-12-03'),
+(9, 5, 5, 0, '2023-08-15'),
+(10, 6, 1, 25, '2023-12-01'),
+(11, 7, 4, 300, '2023-11-20'),
+(12, 8, 6, 120, '2023-10-10'),
+(13, 9, 3, 40, '2023-12-08'),
+(14, 10, 7, 250, '2023-09-25'),
+(15, 11, 1, 60, '2023-12-05'),
+(16, 12, 8, 400, '2023-11-15'),
+(17, 13, 2, 0, '2023-07-20'),
+(18, 14, 5, 35, '2023-12-02'),
+(19, 15, 6, 180, '2023-10-30'),
+(20, 16, 7, 90, '2023-11-10'),
+(21, 17, 8, 55, '2023-12-01'),
+(22, 18, 1, 15, '2023-11-25'),
+(23, 19, 2, 0, '2023-06-15'),
+(24, 20, 4, 0, '2023-08-01');
+
+-- ============================================================
+-- 10. SALES
+-- ============================================================
+CREATE TABLE sales (
+    sale_id INT PRIMARY KEY,
+    salesperson_id INT,
+    sale_date DATE,
+    amount DECIMAL(10,2),
+    region VARCHAR(50)
+);
+
+INSERT INTO sales VALUES
+(1, 101, '2023-01-15', 5000.00, 'North'),
+(2, 101, '2023-02-20', 7200.00, 'North'),
+(3, 101, '2023-03-10', 3100.00, 'East'),
+(4, 102, '2023-01-22', 8900.00, 'South'),
+(5, 102, '2023-04-05', 12000.00, 'South'),
+(6, 102, '2023-05-18', 4500.00, 'West'),
+(7, 103, '2023-02-01', 6700.00, 'East'),
+(8, 103, '2023-06-12', 9300.00, 'North'),
+(9, 103, '2023-08-20', 1500.00, 'West'),
+(10, 104, '2023-03-15', 11200.00, 'South'),
+(11, 104, '2023-07-08', 7800.00, 'East'),
+(12, 105, '2023-01-30', 5600.00, 'North'),
+(13, 105, '2023-09-14', 13400.00, 'South'),
+(14, 105, '2023-11-22', 3200.00, 'West'),
+(15, 106, '2023-04-20', 8900.00, 'East'),
+(16, 106, '2023-10-05', 10100.00, 'North'),
+(17, 107, '2023-05-12', 4500.00, 'South'),
+(18, 107, '2023-12-01', 16700.00, 'West'),
+(19, 108, '2023-06-18', 7300.00, 'East'),
+(20, 108, '2023-11-30', 5400.00, 'North');
+
+-- ============================================================
+-- 11. WEBSITE_VISITS
+-- ============================================================
+CREATE TABLE website_visits (
+    visit_id INT PRIMARY KEY,
+    user_id INT,
+    page_url VARCHAR(200),
+    visit_time DATETIME,
+    session_id VARCHAR(50),
+    device_type VARCHAR(20) -- 'mobile', 'desktop', 'tablet'
+);
+
+INSERT INTO website_visits VALUES
+(1, 1, '/home', '2023-12-01 09:15:00', 'sess_a1', 'desktop'),
+(2, 1, '/pricing', '2023-12-01 09:18:30', 'sess_a1', 'desktop'),
+(3, 1, '/features', '2023-12-01 09:22:00', 'sess_a1', 'desktop'),
+(4, 1, '/checkout', '2023-12-01 09:28:45', 'sess_a1', 'desktop'),
+(5, 1, '/success', '2023-12-01 09:30:10', 'sess_a1', 'desktop'),
+(6, 2, '/home', '2023-12-01 10:05:00', 'sess_b2', 'mobile'),
+(7, 2, '/pricing', '2023-12-01 10:08:20', 'sess_b2', 'mobile'),
+(8, 2, '/checkout', '2023-12-01 10:15:00', 'sess_b2', 'mobile'),
+(9, 3, '/home', '2023-12-01 11:00:00', 'sess_c3', 'tablet'),
+(10, 3, '/blog', '2023-12-01 11:05:00', 'sess_c3', 'tablet'),
+(11, 3, '/pricing', '2023-12-01 11:12:00', 'sess_c3', 'tablet'),
+(12, 4, '/home', '2023-12-01 14:20:00', 'sess_d4', 'desktop'),
+(13, 4, '/pricing', '2023-12-01 14:23:00', 'sess_d4', 'desktop'),
+(14, 4, '/checkout', '2023-12-01 14:30:00', 'sess_d4', 'desktop'),
+(15, 5, '/home', '2023-12-01 16:00:00', 'sess_e5', 'mobile'),
+(16, 5, '/features', '2023-12-01 16:04:00', 'sess_e5', 'mobile'),
+(17, 5, '/pricing', '2023-12-01 16:10:00', 'sess_e5', 'mobile'),
+(18, 5, '/checkout', '2023-12-01 16:18:00', 'sess_e5', 'mobile'),
+(19, 5, '/success', '2023-12-01 16:20:00', 'sess_e5', 'mobile'),
+(20, 6, '/home', '2023-12-02 09:00:00', 'sess_f6', 'desktop'),
+(21, 6, '/pricing', '2023-12-02 09:05:00', 'sess_f6', 'desktop'),
+(22, 6, '/checkout', '2023-12-02 09:15:00', 'sess_f6', 'desktop'),
+(23, 7, '/home', '2023-12-02 10:30:00', 'sess_g7', 'tablet'),
+(24, 7, '/pricing', '2023-12-02 10:35:00', 'sess_g7', 'tablet'),
+(25, 7, '/features', '2023-12-02 10:42:00', 'sess_g7', 'tablet');
+
+-- ============================================================
+-- 12. EVENTS
+-- ============================================================
+CREATE TABLE events (
+    event_id INT PRIMARY KEY,
+    event_name VARCHAR(200),
+    start_time DATETIME,
+    end_time DATETIME,
+    timezone VARCHAR(50),
+    event_type VARCHAR(50)
+);
+
+INSERT INTO events VALUES
+(1, 'Product Launch Webinar', '2023-12-02 10:00:00', '2023-12-02 12:30:00', 'EST', 'webinar'),
+(2, 'Weekend Hackathon', '2023-12-09 09:00:00', '2023-12-10 18:00:00', 'PST', 'competition'),
+(3, 'Q4 Review Meeting', '2023-12-04 14:00:00', '2023-12-04 15:30:00', 'GMT', 'meeting'),
+(4, 'Holiday Party', '2023-12-16 19:00:00', '2023-12-17 01:00:00', 'EST', 'social'),
+(5, 'Year-End Sale', '2023-12-30 00:00:00', '2024-01-02 23:59:00', 'UTC', 'promotion'),
+(6, 'Team Standup', '2023-12-01 09:00:00', '2023-12-01 09:15:00', 'CET', 'meeting'),
+(7, 'Customer Workshop', '2023-12-03 13:00:00', '2023-12-03 17:00:00', 'PST', 'workshop'),
+(8, 'Board Meeting', '2023-12-11 10:00:00', '2023-12-11 14:00:00', 'GMT', 'meeting'),
+(9, 'New Year Countdown', '2023-12-31 22:00:00', '2024-01-01 02:00:00', 'EST', 'social'),
+(10, 'Training Session', '2023-12-05 09:00:00', '2023-12-05 16:00:00', 'CET', 'workshop');
+
+-- ============================================================
+-- 13. LOGS
+-- ============================================================
+CREATE TABLE logs (
+    log_id INT PRIMARY KEY,
+    log_message TEXT,
+    log_level VARCHAR(20),
+    created_at DATETIME,
+    service_name VARCHAR(50)
+);
+
+INSERT INTO logs VALUES
+(1, 'User login successful for user_id=4521', 'INFO', '2023-12-01 08:15:00', 'auth-service'),
+(2, 'ERR-1001: Database connection timeout after 30s', 'ERROR', '2023-12-01 09:30:00', 'db-service'),
+(3, 'Cache miss for key: user_profile_4521', 'WARN', '2023-12-01 10:00:00', 'cache-service'),
+(4, 'ERR-2042: Payment processing failed for transaction_id=78901', 'ERROR', '2023-12-01 11:45:00', 'payment-service'),
+(5, 'Scheduled job completed: daily_report', 'INFO', '2023-12-01 12:00:00', 'scheduler'),
+(6, 'ERR-1001: Database connection timeout after 45s', 'ERROR', '2023-12-01 13:20:00', 'db-service'),
+(7, 'Memory usage at 85% threshold', 'WARN', '2023-12-01 14:10:00', 'monitoring'),
+(8, 'ERR-5503: Invalid API key provided in request', 'ERROR', '2023-12-01 15:00:00', 'api-gateway'),
+(9, 'User logout: session_id=sess_a1 expired', 'INFO', '2023-12-01 16:30:00', 'auth-service'),
+(10, 'ERR-2042: Payment processing failed for transaction_id=78902', 'ERROR', '2023-12-01 17:15:00', 'payment-service'),
+(11, 'Backup completed successfully', 'INFO', '2023-12-01 18:00:00', 'backup-service'),
+(12, 'ERR-9999: Unknown error in module X', 'ERROR', '2023-12-01 19:30:00', 'legacy-service'),
+(13, 'Rate limit exceeded for IP 192.168.1.100', 'WARN', '2023-12-01 20:00:00', 'api-gateway'),
+(14, 'ERR-1001: Database connection timeout after 60s', 'ERROR', '2023-12-02 08:00:00', 'db-service'),
+(15, 'Health check passed for all services', 'INFO', '2023-12-02 09:00:00', 'monitoring');
+
+-- ============================================================
+-- 14. STUDENTS
+-- ============================================================
+CREATE TABLE students (
+    student_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    enrollment_date DATE,
+    major VARCHAR(50)
+);
+
+INSERT INTO students VALUES
+(1, 'Emma Watson', 'emma@uni.edu', '2021-09-01', 'Computer Science'),
+(2, 'Daniel Radcliffe', 'daniel@uni.edu', '2022-01-15', 'Mathematics'),
+(3, 'Rupert Grint', 'rupert@uni.edu', '2020-09-01', 'Physics'),
+(4, 'Bonnie Wright', 'bonnie@uni.edu', '2023-01-10', 'Computer Science'),
+(5, 'Tom Felton', 'tom@uni.edu', '2021-09-01', 'Chemistry'),
+(6, 'Matthew Lewis', 'matthew@uni.edu', '2022-09-01', 'Biology'),
+(7, 'Evanna Lynch', 'evanna@uni.edu', '2023-03-01', 'Mathematics'),
+(8, 'Alfred Enoch', 'alfred@uni.edu', '2020-09-01', 'Physics'),
+(9, 'Oliver Phelps', 'oliver@uni.edu', '2021-09-01', 'Computer Science'),
+(10, 'James Phelps', 'james@uni.edu', '2022-01-15', 'Chemistry');
+
+-- ============================================================
+-- 15. COURSES
+-- ============================================================
+CREATE TABLE courses (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(100),
+    credits INT,
+    department VARCHAR(50)
+);
+
+INSERT INTO courses VALUES
+(101, 'Database Systems', 4, 'Computer Science'),
+(102, 'Linear Algebra', 3, 'Mathematics'),
+(103, 'Quantum Mechanics', 4, 'Physics'),
+(104, 'Organic Chemistry', 3, 'Chemistry'),
+(105, 'Data Structures', 4, 'Computer Science'),
+(106, 'Machine Learning', 4, 'Computer Science'),
+(107, 'Calculus III', 3, 'Mathematics'),
+(108, 'Thermodynamics', 3, 'Physics'),
+(109, 'Biochemistry', 3, 'Chemistry'),
+(110, 'Cell Biology', 3, 'Biology');
+
+-- ============================================================
+-- 16. ENROLLMENTS
+-- ============================================================
+CREATE TABLE enrollments (
+    enrollment_id INT PRIMARY KEY,
+    student_id INT,
+    course_id INT,
+    enrollment_date DATE,
+    completion_date DATE,
+    grade VARCHAR(5)
+);
+
+INSERT INTO enrollments VALUES
+(1, 1, 101, '2021-09-01', '2022-01-15', 'A'),
+(2, 1, 105, '2022-09-01', '2023-01-10', 'B+'),
+(3, 2, 102, '2022-01-15', '2022-05-20', 'A-'),
+(4, 3, 103, '2020-09-01', NULL, NULL),
+(5, 4, 101, '2023-01-10', NULL, NULL),
+(6, 5, 104, '2021-09-01', '2022-01-15', 'B'),
+(7, 6, 110, '2022-09-01', '2023-01-10', 'A'),
+(8, 7, 107, '2023-03-01', NULL, NULL),
+(9, 8, 103, '2020-09-01', '2021-01-15', 'C+'),
+(10, 8, 108, '2021-09-01', '2022-01-15', 'B'),
+(11, 9, 101, '2021-09-01', NULL, NULL),
+(12, 9, 106, '2022-09-01', NULL, NULL),
+(13, 10, 104, '2022-01-15', '2022-05-20', 'A'),
+(14, 2, 107, '2022-09-01', NULL, NULL),
+(15, 3, 108, '2021-09-01', NULL, NULL),
+(16, 5, 109, '2022-09-01', NULL, NULL),
+(17, 1, 106, '2023-01-10', NULL, NULL);
+
+-- ============================================================
+-- 17. ACCOUNTS
+-- ============================================================
+CREATE TABLE accounts (
+    account_id INT PRIMARY KEY,
+    account_holder VARCHAR(100),
+    account_type VARCHAR(20), -- 'checking', 'savings', 'credit'
+    balance DECIMAL(12,2),
+    opened_date DATE,
+    is_active TINYINT(1)
+);
+
+INSERT INTO accounts VALUES
+(1, 'Alice Johnson', 'checking', 4520.50, '2020-03-15', 1),
+(2, 'Alice Johnson', 'savings', 12500.00, '2020-03-15', 1),
+(3, 'Bob Smith', 'checking', 890.25, '2021-06-01', 1),
+(4, 'Bob Smith', 'credit', -2500.00, '2021-06-01', 1),
+(5, 'Carol White', 'savings', 34000.00, '2019-11-20', 1),
+(6, 'David Brown', 'checking', 150.00, '2022-01-10', 0),
+(7, 'Eva Green', 'checking', 6780.00, '2021-09-01', 1),
+(8, 'Eva Green', 'savings', 22000.00, '2021-09-01', 1),
+(9, 'Frank Black', 'checking', 45.00, '2023-02-14', 1),
+(10, 'Grace Lee', 'credit', -1500.00, '2020-08-15', 1);
+
+-- ============================================================
+-- 18. TRANSACTIONS
+-- ============================================================
+CREATE TABLE transactions (
+    transaction_id INT PRIMARY KEY,
+    account_id INT,
+    transaction_type VARCHAR(20), -- 'debit', 'credit', 'transfer'
+    amount DECIMAL(10,2),
+    transaction_date DATE,
+    is_flagged TINYINT(1),
+    description VARCHAR(200)
+);
+
+INSERT INTO transactions VALUES
+(1, 1, 'debit', 150.00, '2023-11-15', 0, 'Grocery store'),
+(2, 1, 'debit', 89.50, '2023-11-20', 0, 'Gas station'),
+(3, 1, 'credit', 2500.00, '2023-11-25', 0, 'Paycheck deposit'),
+(4, 2, 'transfer', 500.00, '2023-11-18', 0, 'To checking'),
+(5, 3, 'debit', 1200.00, '2023-11-10', 1, 'Large purchase'),
+(6, 3, 'debit', 45.00, '2023-12-01', 0, 'Coffee shop'),
+(7, 4, 'credit', 500.00, '2023-11-22', 0, 'Payment received'),
+(8, 5, 'transfer', 10000.00, '2023-11-15', 1, 'Wire transfer'),
+(9, 7, 'debit', 350.00, '2023-12-05', 0, 'Electronics'),
+(10, 7, 'debit', 12000.00, '2023-12-08', 1, 'Car down payment'),
+(11, 8, 'transfer', 2500.00, '2023-11-20', 0, 'Investment'),
+(12, 9, 'debit', 25.00, '2023-12-10', 0, 'Fast food'),
+(13, 10, 'credit', 800.00, '2023-11-28', 0, 'Refund'),
+(14, 1, 'transfer', 15000.00, '2023-12-12', 1, 'Property purchase'),
+(15, 3, 'debit', 6700.00, '2023-12-14', 1, 'Jewelry');
+
+-- ============================================================
+-- 19. Q1_SALES & Q2_SALES (for set operators)
+-- ============================================================
+CREATE TABLE q1_sales (
+    product_id INT,
+    amount DECIMAL(10,2),
+    units_sold INT
+);
+
+CREATE TABLE q2_sales (
+    product_id INT,
+    amount DECIMAL(10,2),
+    units_sold INT
+);
+
+INSERT INTO q1_sales VALUES
+(1, 5000.00, 40),
+(2, 3200.00, 18),
+(3, 1800.00, 150),
+(5, 7500.00, 50),
+(7, 1200.00, 48),
+(9, 4500.00, 10),
+(11, 8900.00, 30),
+(13, 2100.00, 105),
+(15, 600.00, 17),
+(17, 3400.00, 17);
+
+INSERT INTO q2_sales VALUES
+(1, 5200.00, 42),
+(2, 6400.00, 36),
+(4, 900.00, 90),
+(5, 8000.00, 53),
+(6, 15000.00, 25),
+(8, 5400.00, 120),
+(10, 2200.00, 100),
+(11, 9500.00, 32),
+(12, 4800.00, 384),
+(14, 3500.00, 35);
+
+-- ============================================================
+-- 20. USERS, SUBSCRIPTIONS, PAYMENTS (capstone exercises)
+-- ============================================================
+CREATE TABLE users (
+    user_id INT PRIMARY KEY,
+    username VARCHAR(50),
+    email VARCHAR(100),
+    created_at DATE,
+    country VARCHAR(50)
+);
+
+INSERT INTO users VALUES
+(1, 'alpha_user', 'alpha@example.com', '2021-03-15', 'USA'),
+(2, 'beta_dev', 'beta@example.com', '2022-07-20', 'UK'),
+(3, 'gamma_tester', 'gamma@example.com', '2020-01-10', 'Germany'),
+(4, 'delta_analyst', 'delta@example.com', '2023-05-01', 'Canada'),
+(5, 'epsilon_trader', 'epsilon@example.com', '2022-11-30', 'USA'),
+(6, 'zeta_designer', 'zeta@example.com', '2021-09-15', 'France'),
+(7, 'eta_engineer', 'eta@example.com', '2023-02-28', 'Spain'),
+(8, 'theta_manager', 'theta@example.com', '2020-06-20', 'Italy'),
+(9, 'iota_writer', 'iota@example.com', '2022-04-10', 'Japan'),
+(10, 'kappa_creator', 'kappa@example.com', '2021-12-01', 'Brazil'),
+(11, 'lambda_ops', 'lambda@example.com', '2023-08-15', 'USA'),
+(12, 'mu_research', 'mu@example.com', '2022-10-20', 'UK'),
+(13, 'nu_crypto', 'nu@example.com', '2020-03-01', 'CN'),
+(14, 'xi_data', 'xi@example.com', '2021-07-15', 'RU'),
+(15, 'omicron_ai', 'omicron@example.com', '2023-01-20', 'IR');
+
+CREATE TABLE subscriptions (
+    subscription_id INT PRIMARY KEY,
+    user_id INT,
+    plan_type VARCHAR(20), -- 'basic', 'pro', 'enterprise'
+    start_date DATE,
+    end_date DATE,
+    monthly_amount DECIMAL(10,2)
+);
+
+INSERT INTO subscriptions VALUES
+(1, 1, 'pro', '2022-01-01', '2023-12-31', 49.00),
+(2, 1, 'enterprise', '2024-01-01', NULL, 199.00),
+(3, 2, 'basic', '2022-08-01', '2023-08-01', 19.00),
+(4, 2, 'pro', '2023-08-15', NULL, 49.00),
+(5, 3, 'enterprise', '2020-02-01', NULL, 199.00),
+(6, 4, 'basic', '2023-06-01', '2024-06-01', 19.00),
+(7, 5, 'pro', '2023-01-01', NULL, 49.00),
+(8, 6, 'basic', '2022-10-01', '2023-10-01', 19.00),
+(9, 6, 'pro', '2023-10-15', NULL, 49.00),
+(10, 7, 'basic', '2023-03-01', '2024-03-01', 19.00),
+(11, 8, 'enterprise', '2020-07-01', NULL, 199.00),
+(12, 9, 'pro', '2022-05-01', NULL, 49.00),
+(13, 10, 'basic', '2022-01-01', '2023-01-01', 19.00),
+(14, 11, 'pro', '2023-09-01', NULL, 49.00),
+(15, 12, 'basic', '2023-01-01', '2024-01-01', 19.00),
+(16, 1, 'basic', '2021-01-01', '2021-12-31', 19.00),
+(17, 3, 'pro', '2019-01-01', '2019-12-31', 49.00);
+
+CREATE TABLE payments (
+    payment_id INT PRIMARY KEY,
+    subscription_id INT,
+    payment_date DATE,
+    amount DECIMAL(10,2),
+    status VARCHAR(20) -- 'completed', 'failed', 'pending'
+);
+
+INSERT INTO payments VALUES
+(1, 1, '2023-01-15', 49.00, 'completed'),
+(2, 1, '2023-02-15', 49.00, 'completed'),
+(3, 1, '2023-03-15', 49.00, 'failed'),
+(4, 1, '2023-04-15', 49.00, 'completed'),
+(5, 1, '2023-05-15', 49.00, 'completed'),
+(6, 1, '2023-06-15', 49.00, 'failed'),
+(7, 1, '2023-07-15', 49.00, 'failed'),
+(8, 1, '2023-08-15', 49.00, 'completed'),
+(9, 1, '2023-09-15', 49.00, 'completed'),
+(10, 1, '2023-10-15', 49.00, 'completed'),
+(11, 1, '2023-11-15', 49.00, 'failed'),
+(12, 1, '2023-12-15', 49.00, 'completed'),
+(13, 2, '2024-01-15', 199.00, 'completed'),
+(14, 2, '2024-02-15', 199.00, 'completed'),
+(15, 2, '2024-03-15', 199.00, 'failed'),
+(16, 2, '2024-04-15', 199.00, 'failed'),
+(17, 2, '2024-05-15', 199.00, 'failed'),
+(18, 2, '2024-06-15', 199.00, 'completed'),
+(19, 3, '2022-08-15', 19.00, 'completed'),
+(20, 4, '2023-08-15', 49.00, 'completed'),
+(21, 4, '2023-09-15', 49.00, 'failed'),
+(22, 4, '2023-10-15', 49.00, 'failed'),
+(23, 4, '2023-11-15', 49.00, 'failed'),
+(24, 4, '2023-12-15', 49.00, 'completed'),
+(25, 5, '2023-01-15', 199.00, 'completed'),
+(26, 5, '2023-02-15', 199.00, 'completed'),
+(27, 5, '2023-03-15', 199.00, 'completed'),
+(28, 5, '2023-04-15', 199.00, 'completed'),
+(29, 5, '2023-05-15', 199.00, 'completed'),
+(30, 5, '2023-06-15', 199.00, 'completed'),
+(31, 5, '2023-07-15', 199.00, 'completed'),
+(32, 5, '2023-08-15', 199.00, 'completed'),
+(33, 5, '2023-09-15', 199.00, 'completed'),
+(34, 5, '2023-10-15', 199.00, 'completed'),
+(35, 5, '2023-11-15', 199.00, 'completed'),
+(36, 5, '2023-12-15', 199.00, 'completed'),
+(37, 7, '2023-01-15', 49.00, 'completed'),
+(38, 7, '2023-02-15', 49.00, 'failed'),
+(39, 7, '2023-03-15', 49.00, 'failed'),
+(40, 7, '2023-04-15', 49.00, 'failed'),
+(41, 7, '2023-05-15', 49.00, 'completed'),
+(42, 7, '2023-06-15', 49.00, 'completed'),
+(43, 7, '2023-07-15', 49.00, 'completed'),
+(44, 7, '2023-08-15', 49.00, 'completed'),
+(45, 7, '2023-09-15', 49.00, 'completed'),
+(46, 7, '2023-10-15', 49.00, 'completed'),
+(47, 7, '2023-11-15', 49.00, 'failed'),
+(48, 7, '2023-12-15', 49.00, 'failed'),
+(49, 9, '2023-10-15', 49.00, 'completed'),
+(50, 9, '2023-11-15', 49.00, 'failed'),
+(51, 9, '2023-12-15', 49.00, 'failed'),
+(52, 11, '2023-09-15', 49.00, 'completed'),
+(53, 11, '2023-10-15', 49.00, 'failed'),
+(54, 11, '2023-11-15', 49.00, 'failed'),
+(55, 11, '2023-12-15', 49.00, 'failed'),
+(56, 12, '2022-05-15', 49.00, 'completed'),
+(57, 12, '2022-06-15', 49.00, 'completed'),
+(58, 12, '2022-07-15', 49.00, 'failed'),
+(59, 12, '2022-08-15', 49.00, 'completed'),
+(60, 12, '2022-09-15', 49.00, 'failed');
+
+#i used AI to create a dataset that i will use make and solve hundreds of exercices, 
+# each of them contains a mix of all the concepts i learned thus far, so this will be
+# both hard and the most fruitful learning experience i'l have, good practice.
+

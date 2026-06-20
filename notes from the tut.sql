@@ -207,4 +207,36 @@ SHOW CREATE TABLE salesdb.orders;        -- Full CREATE TABLE statement
 #window functions or regular sql. its to hone my skills and not forget something while 
 #learning something else, for example i forgot a lot abt window functions
 
+Table
+Audience	Preferred Join Type	Why
+Data quality analyst	LEFT JOIN	Find orphans, investigate missing data
+Sales manager	INNER JOIN	Clean reports, no NULL confusion
+Executive dashboard	INNER JOIN	Polished, complete records only
+
+#apparently cant open the temp table twice in a query,
+#the workaround (self-join, variable, or two temp tables).
+
+| Table                     | Rows    | Key Relationships                                    | Concepts Covered                               |
+| ------------------------- | ------- | ---------------------------------------------------- | ---------------------------------------------- |
+| `customers`               | 15      | —                                                    | Filtering, NULLs, dates, CASE                  |
+| `orders`                  | 20      | `customer_id` → customers                            | Joins, aggregation, dates                      |
+| `order_items`             | 26      | `order_id` → orders, `product_id` → products         | Multi-level joins, aggregation                 |
+| `products`                | 20      | —                                                    | String functions, filtering, CASE              |
+| `departments`             | 8       | —                                                    | Joins, aggregation                             |
+| `employees`               | 20      | `department` → departments, `manager_id` → self      | Self-joins, aggregation, NULLs                 |
+| `employee_hierarchy`      | 15      | `manager_id` → self                                  | Recursive CTEs, self-joins                     |
+| `warehouses`              | 8       | —                                                    | Joins, filtering                               |
+| `inventory`               | 24      | `product_id` → products, `warehouse_id` → warehouses | Multi-joins, aggregation, zero-checks          |
+| `sales`                   | 20      | `salesperson_id` — no FK table                       | Window functions, aggregation                  |
+| `website_visits`          | 25      | `user_id` — no FK table                              | Session analysis, time diff, path tracking     |
+| `events`                  | 10      | —                                                    | Date/time functions, duration, weekend overlap |
+| `logs`                    | 15      | —                                                    | String extraction, pattern matching, filtering |
+| `students`                | 10      | —                                                    | Filtering, dates                               |
+| `courses`                 | 10      | —                                                    | Joins, set operators                           |
+| `enrollments`             | 17      | `student_id` → students, `course_id` → courses       | Completion tracking, NULLs, aggregation        |
+| `accounts`                | 10      | `account_holder` — no strict FK                      | Aggregation, filtering                         |
+| `transactions`            | 15      | `account_id` → accounts                              | Flag analysis, amount thresholds               |
+| `q1_sales` / `q2_sales`   | 10 each | —                                                    | Set operators, comparison                      |
+| `users` / `subscriptions` / `payments`  | 15 / 17 / 60 | FK chain: users → subscriptions → payments | Complex multi-table analysis, capstone|
+  				                                                                                      
 
