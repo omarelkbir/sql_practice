@@ -2622,11 +2622,11 @@ WITH lifetime_amount AS (
 	FROM orders
     GROUP BY customer_id
 ),
-percentile AS (
+quartile AS (
 	SELECT
 		customer_id,
 		total_spent,
-		NTILE(4) OVER(ORDER BY total_spent DESC) AS customer_percentile
+		NTILE(4) OVER(ORDER BY total_spent DESC) AS customer_quartile
 	FROM lifetime_amount
 )
 SELECT 
@@ -3483,4 +3483,99 @@ INSERT INTO payments VALUES
 #i used AI to create a dataset that i will use make and solve hundreds of exercices, 
 # each of them contains a mix of all the concepts i learned thus far, so this will be
 # both hard and the most fruitful learning experience i'l have, good practice.
+
+#BATCH 1 OF OVER 270 INTERVIEW WORTHY EXERCISES:
+#EXERCISE 1:
+SELECT 
+	name,
+    email,
+    phone,
+    CASE
+		WHEN email IS NOT NULL AND phone IS NULL THEN 'email_only'
+        WHEN phone IS NOT NULL AND email IS NULL THEN 'phone_only'
+        ELSE 'both'
+	END AS contact_method
+FROM customers
+WHERE is_active = 1 AND country IN ('USA', 'UK', 'Canada')
+ORDER BY name;
+
+#EXERCISE 2:
+SELECT 
+	order_id,
+    customer_id,
+    order_date,
+    amount,
+	DATEDIFF((SELECT MAX(order_date) FROM orders), order_date) AS days_ago
+FROM orders
+WHERE
+	status = 'completed'  
+	AND order_date >= (SELECT MAX(order_date) FROM orders) - INTERVAL 90 DAY
+ORDER BY days_ago;
+
+#WITH CTE:
+WITH max_order_date AS (
+	SELECT MAX(order_date) AS latest_order
+    FROM orders
+)
+SELECT
+	o.order_id,
+    o.customer_id,
+    o.order_date,
+    o.amount,
+    DATEDIFF(m.latest_order, o.order_date) AS days_ago
+FROM orders o
+CROSS JOIN max_order_date m
+WHERE 
+	o.status = 'completed'
+	AND o.order_date >= m.latest_order - INTERVAL 90 DAY
+ORDER BY days_ago;
+	
+#EXERCISE 3:
+SELECT 
+	product_name,
+    category
+FROM products
+WHERE category NOT IN ('Electronics', 'Gadgets')
+	AND description NOT LIKE '%warranty%' 
+    AND LEFT(product_name, 1) IN ('A', 'E', 'I', 'O','U')
+ORDER BY product_name;
+
+#EXERCISE 4:
+SELECT
+	e.name,
+    e.department,
+    e.salary,
+    ROUND(e.salary - (
+		SELECT AVG(salary) FROM employees 
+		WHERE department = e.department), 2) AS above_avg_by 
+FROM employees e
+INNER JOIN departments d
+ON e.department = d.dept_name
+WHERE d.location IN ('New York', 'London')
+	AND e.salary > (SELECT AVG(salary)
+					FROM employees
+                    WHERE department = e.department)
+ORDER BY above_avg_by DESC;
+
+#WITH CTE:
+WITH dept_avg AS (
+	SELECT 
+		department,
+		AVG(salary) AS avg_dept
+    FROM employees
+    GROUP BY department
+)
+SELECT 
+	e.name,
+    e.department,
+    e.salary,
+    ROUND(e.salary - a.avg_dept, 2) AS above_avg_by
+FROM employees e
+INNER JOIN dept_avg a
+	ON e.department = a.department
+INNER JOIN departments d 
+	ON e.department = d.dept_name
+WHERE d.location IN ('New York', 'London')
+	AND e.salary > a.avg_dept
+ORDER BY above_avg_by DESC;
 
