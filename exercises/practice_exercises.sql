@@ -3579,3 +3579,86 @@ WHERE d.location IN ('New York', 'London')
 	AND e.salary > a.avg_dept
 ORDER BY above_avg_by DESC;
 
+#EXERCISE 5
+SELECT
+	transaction_id,
+    account_id,
+    transaction_type,
+    amount,
+    CASE
+		WHEN amount > 20000 THEN 'High'
+        WHEN amount > 10000 THEN 'Medium'
+        ELSE 'Low'
+	END AS risk_level
+FROM transactions
+WHERE 
+	(transaction_type = 'transfer' AND amount > 10000) 
+    OR 
+	(transaction_type = 'debit' AND amount > 5000 AND 
+     transaction_date >= (
+		SELECT MAX(transaction_date) FROM transactions) - INTERVAL 30 DAY
+	)
+ORDER BY amount DESC;
+	
+#EXERCISE 6
+SELECT 
+	e.name,
+    e.salary,
+    m.name AS manager_name,
+    m.salary AS manager_salary,
+    e.salary - m.salary AS salary_diff
+FROM employees e
+JOIN employees m
+	ON e.manager_id = m.employee_id
+WHERE e.salary >= m.salary
+ORDER BY salary_diff;
+
+#EXERCISE 7
+SELECT q1.product_id, 'New_In_Q1' AS status
+FROM q1_sales q1
+LEFT JOIN q2_sales q2
+	ON q1.product_id = q2.product_id
+WHERE q2.product_id IS NULL
+UNION ALL
+SELECT q1.product_id, 'Doubled' AS status
+FROM q1_sales q1
+INNER JOIN q2_sales q2 
+	ON q1.product_id = q2.product_id
+WHERE q2.amount >= q1.amount * 2;
+
+
+SELECT product_id, 'New_In_Q1' AS status
+FROM (
+    SELECT product_id FROM q1_sales
+    EXCEPT
+    SELECT product_id FROM q2_sales
+) AS exception_results
+
+UNION ALL
+
+SELECT product_id, 'Doubled' AS status
+FROM (
+    SELECT product_id FROM q1_sales
+    INTERSECT
+    SELECT product_id FROM q2_sales q2
+    WHERE q2.amount >= (
+        SELECT MIN(q1.amount) * 2 #we use min() to return a scalar value so it doesnt crash
+        FROM q1_sales q1 
+        WHERE q1.product_id = q2.product_id
+    )
+) AS intersection_results;
+
+#EXERCISE 8 
+SELECT *
+FROM (
+	SELECT 
+		salesperson_id,
+		sale_date,
+		amount,
+		ROW_NUMBER() OVER (PARTITION BY salesperson_id ORDER BY amount DESC) AS rank_in_year
+	FROM sales
+	WHERE sale_date >= '2023-01-01' AND sale_date <= '2023-12-31'
+    ) AS t WHERE rank_in_year = 1
+ORDER BY amount DESC;
+
+
