@@ -3661,4 +3661,47 @@ FROM (
     ) AS t WHERE rank_in_year = 1
 ORDER BY amount DESC;
 
+#EXERCISE 9
+SELECT
+	user_id,
+    session_id,
+    ROUND(TIMESTAMPDIFF(SECOND, first_pricing, first_checkout) /60.0 , 2) AS time_to_checkout
+FROM (
+	SELECT 
+		user_id,
+		session_id,
+		MIN(CASE WHEN page_url = '/pricing' THEN visit_time END) AS first_pricing,
+		MIN(CASE WHEN page_url = '/checkout' THEN  visit_time END) AS first_checkout,
+        MIN(CASE WHEN page_url = '/success' THEN visit_time END) AS success_visit
+	FROM website_visits
+	GROUP BY user_id, session_id
+    ) AS t 
+WHERE first_pricing IS NOT NULL 
+	AND first_checkout IS NOT NULL 
+    AND success_visit IS NULL
+ORDER BY time_to_checkout;
+
+#WITH CTE
+WITH session_timestamps AS (
+	SELECT 
+		user_id,
+        session_id,
+        MIN(CASE WHEN page_url = '/pricing' THEN visit_time END) AS first_pricing,
+        MIN(CASE WHEN page_url = '/checkout' THEN visit_time END) AS first_checkout,
+        MIN(CASE WHEN page_url = '/success' THEN visit_time END) AS success_visit
+	FROM website_visits
+	GROUP BY user_id, session_id
+)
+SELECT 
+	user_id,
+    session_id,
+    ROUND(TIMESTAMPDIFF(SECOND, first_pricing, first_checkout) / 60.0, 2) AS time_to_checkout
+FROM session_timestamps
+WHERE first_pricing IS NOT NULL
+	AND first_checkout IS NOT NULL
+    AND success_visit IS NULL
+ORDER BY time_to_checkout ASC;
+
+#EXERCISE 10
+        
 
