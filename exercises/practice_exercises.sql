@@ -3702,6 +3702,227 @@ WHERE first_pricing IS NOT NULL
     AND success_visit IS NULL
 ORDER BY time_to_checkout ASC;
 
-#EXERCISE 10
-        
+# EXTRA EXERCISE with 6 solutions
+# SOLUTION 1
+WITH active_parents AS (
+	SELECT parent_id, status FROM parent_child_status
+	WHERE status = 'Active'
+	GROUP BY parent_id
+),
+inactive_parents AS (
+	SELECT parent_id, status 
+    FROM parent_child_status a
+    WHERE a.parent_id NOT IN (SELECT parent_id FROM active_parents)
+    #the NOT IN approach breaks and returns nothing if even a single null value 
+    #is returned from the subquery here, NOT EXISTS is a better approach %90 of the time
+)
+SELECT * FROM active_parents
+UNION 
+SELECT * FROM inactive_parents
+order by parent_id;
+
+#SOLUTION 2
+SELECT 
+	parent_id,
+    status
+FROM (
+	SELECT 
+		parent_id,
+        status,
+		ROW_NUMBER() OVER (PARTITION BY parent_id ORDER BY status) AS rn
+	FROM parent_child_status
+) WHERE rn = 1;
+
+#SOLUTION 3 (SAME AS 2 BUT CLEANER AS WE PUT IT IN A CTE) 
+WITH parent_status AS (
+	SELECT 
+		parent_id,
+		status,
+        ROW_NUMBER() OVER (PARTITION BY parent_id ORDER BY status) AS rn 
+	FROM parent_child_status
+)
+SELECT parent_id, status FROM parent_status
+WHERE rn = 1;
+
+#SOLUTION 4
+SELECT 
+	a.parent_id,
+    CASE WHEN b.status IS NULL THEN 'Inactive' ELSE b.status END AS status
+#the case statemnt is creating another temp column status, same name as the already
+#existing status column, so dont get confused and think this case statement is insering
+# its result value into the physical status column. no, its just creating another 
+# temp result column with the same exact, but showing the results we wanted. another
+# good use of case statements too.
+FROM (SELECT DISTINCT parent_id FROM parent_child_status) a 
+LEFT JOIN ( SELECT DISTINCT parent_id, status 
+			FROM parent_child_status
+			WHERE status = 'Active') b
+			ON a.parent_id = b.parent_id
+ORDER BY a.parent_id;
+
+#SOLUTION 5
+SELECT DISTINCT parent_id, status
+FROM parent_child_status 
+WHERE status = 'Active' 
+
+UNION 
+# BTW WE DONT NEED DISTINCT ANYMORE SINCE WE ARE USING UNION, IT REMOVE DUPES ANYWAY
+# BUT U NEED THEM IF U DECIDE TO USE UNION ALL. I JUST KEPT THEM HERE FOR THE SAKE OF THIS NOTE 
+SELECT DISTINCT parent_id, status
+FROM parent_child_status a
+WHERE LOWER(status) = 'inactive'
+AND NOT EXISTS (SELECT 1 FROM parent_child_status b
+						  WHERE b.status = 'Active'
+                          AND a.parent_id = b.parent_id)
+ORDER BY parent_id;
+
+#SOLUTION 6, THE SIMPLIST ONE
+SELECT parent_id, MIN(status) AS status
+FROM parent_child_status
+GROUP BY parent_id
+ORDER BY parent_id;
+
+#EXERCISE 10 
+SELECT 
+	order_id,
+    COUNT(product_id) AS product_count,
+    SUM(quantity) AS total_quantity,
+    ROUND(SUM(unit_price * quantity), 2) AS total_amount,
+    ROUND(AVG(unit_price), 2) AS avg_unit_price
+FROM order_items
+GROUP BY order_id
+HAVING COUNT(product_id) >= 3 
+	AND SUM(quantity) >= 10
+    AND AVG(unit_price) BETWEEN 50 AND 200
+ORDER BY total_amount DESC;
+
+#EXERCISE 11 
+WITH overlap AS (
+    SELECT 
+        event_id,
+        event_name,
+        start_time,
+        end_time,
+        DAYOFWEEK(start_time) AS start_day,
+        DAYOFWEEK(end_time)   AS end_day,
+        DATEDIFF(end_time, start_time) AS days_spanned
+    FROM events
+)
+SELECT 
+    event_id,
+    event_name,
+    CASE 
+        -- Rule 1: Starts on Saturday and spans to Sunday (2 days)
+        WHEN start_day = 7 AND days_spanned >= 1 THEN 2
+        -- Rule 2: Touches a single weekend day (Starts or ends on a weekend)
+        WHEN start_day IN (1, 7) OR end_day IN (1, 7) THEN 1
+        -- Rule 3: Spans over a weekend (e.g., Friday to Monday)
+        WHEN start_day = 6 AND days_spanned >= 2 THEN 2 -- Friday to Sunday/Monday
+        WHEN start_day = 5 AND days_spanned >= 3 THEN 2 -- Thursday to Sunday
+        ELSE 0 
+    END AS weekend_days
+FROM overlap
+ORDER BY weekend_days DESC, event_id ASC;
+
+#EXERCISE 12
+WITH formatting AS (
+	SELECT
+		log_id,
+		REGEXP_SUBSTR(log_message, 'ERR-[0-9]{4}') AS error_code,
+#i initialy did log_message as error code bc i wasnt that familiar with regex and relied
+#on the LIKE keyword, but i can only use it in where clause, this an easy exercise if
+#i learned more regex on mysql. but overall everything else is correct
+		LEFT(log_message, 100) AS log_message,
+		created_at
+	FROM logs
+)
+SELECT * FROM formatting
+WHERE created_at >= (
+		SELECT MAX(created_at) - INTERVAL 7 DAY 
+		FROM logs)
+    AND error_code IS NOT NULL
+ORDER BY created_at DESC;
+    
+#EXERCISE 13
+SELECT *
+FROM(
+    SELECT 
+		student_id,
+		name,
+		enrollment_date,
+		DATEDIFF((SELECT MAX(enrollment_date) FROM students), enrollment_date) AS days_since_enrollment
+	FROM students
+) AS student_info 
+WHERE days_since_enrollment > 180
+AND  NOT EXISTS (
+	SELECT 1 FROM enrollments 
+    WHERE completion_date IS NOT NULL
+    AND enrollments.student_id = student_info.student_id);
+    
+#EXERCISE 14
+DROP TEMPORARY TABLE IF EXISTS low_stock_alerts;
+CREATE TEMPORARY TABLE low_stock_alerts AS (
+SELECT 
+    product_id,
+    SUM(quantity) AS total_quantity,
+    MAX(CASE WHEN quantity = 0 THEN warehouse_id END) AS zero_stock_warehouse_id
+    #MAX to ignore the nulls from the other rows
+FROM inventory
+GROUP BY product_id
+HAVING SUM(quantity) < 100 
+    OR MIN(quantity) = 0
+);
+SELECT zw.product_id, zw.total_quantity, zw.zero_stock_warehouse_id
+FROM low_stock_alerts zw
+JOIN warehouses w
+	ON zw.zero_stock_warehouse_id = w.warehouse_id
+WHERE LEFT(w.city, 1) BETWEEN 'A' AND 'M' #or WHERE city REGEXP '^[A-M]'
+;
+#EXERCISE 15
+WITH payment_metrics AS (
+    SELECT 
+        s.user_id,
+        -- Calculate total lifetime completed payments across all user subscriptions
+        SUM(CASE WHEN p.status = 'completed' THEN p.amount ELSE 0 END) AS lifetime_completed_amount,
+        -- Count failed payments in the last 90 days
+        COUNT(CASE WHEN p.status = 'failed' AND p.payment_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY) THEN 1 END) AS failed_payments_count_90d
+    FROM subscriptions s
+    INNER JOIN payments p ON s.subscription_id = p.subscription_id
+    GROUP BY s.user_id
+),
+active_subscriptions AS (
+    SELECT 
+        user_id, 
+        plan_type AS current_plan_type,
+        -- Rank to make sure we pick the most recent active subscription if a user has multiple
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY start_date DESC) as rn
+    FROM subscriptions
+    WHERE end_date IS NULL OR end_date > CURDATE()
+)
+SELECT 
+    u.user_id, 
+    u.username, 
+    u.country, 
+    sub.current_plan_type, 
+    pm.lifetime_completed_amount, 
+    pm.failed_payments_count_90d,
+    -- Apply conditional business rule for risk assessment
+    CASE 
+        WHEN pm.failed_payments_count_90d >= 3 THEN 'churn_risk'
+        ELSE 'attention_needed'
+    END AS risk_status
+FROM users u
+INNER JOIN active_subscriptions sub ON u.user_id = sub.user_id AND sub.rn = 1
+INNER JOIN payment_metrics pm ON u.user_id = pm.user_id
+WHERE 
+    -- 1. Account created more than 1 year ago
+    u.created_at < DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+    -- 2. Exclude users from China, Russia, and Iran
+    AND u.country NOT IN ('CN', 'RU', 'IR')
+    -- 3. At least 2 failed payments in the last 90 days
+    AND pm.failed_payments_count_90d >= 2
+    -- 4. Lifetime completed payments amount is at least 500
+    AND pm.lifetime_completed_amount >= 500.00
+ORDER BY pm.lifetime_completed_amount DESC;
+
 
