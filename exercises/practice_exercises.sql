@@ -3879,50 +3879,60 @@ JOIN warehouses w
 WHERE LEFT(w.city, 1) BETWEEN 'A' AND 'M' #or WHERE city REGEXP '^[A-M]'
 ;
 #EXERCISE 15
-WITH payment_metrics AS (
+WITH system_anchors AS (
+#THIS CTE IS TO ESTABLISH THE MAX DATE OF RELEVANT DATES THAT WE'RE GONNA DO CALCULATION
+# ON, because this is a historical data we cant use current date so we make a cte of 
+# max dates that we can use to calculate dates
+    -- Establish the latest timeline points across the dataset
+    SELECT 
+        (SELECT MAX(created_at) FROM users) AS latest_user_date,
+        (SELECT MAX(payment_date) FROM payments) AS latest_payment_date
+),
+active_users AS (
+    SELECT
+        u.user_id,
+        u.username,
+        u.country,
+        u.created_at,
+        s.plan_type AS current_plan_type
+    FROM users u
+    JOIN subscriptions s ON u.user_id = s.user_id
+    CROSS JOIN system_anchors sa
+    -- Active relative to the latest payment date in our data
+    WHERE s.end_date IS NULL OR s.end_date > sa.latest_payment_date
+),
+payment_metrics AS (
     SELECT 
         s.user_id,
-        -- Calculate total lifetime completed payments across all user subscriptions
         SUM(CASE WHEN p.status = 'completed' THEN p.amount ELSE 0 END) AS lifetime_completed_amount,
-        -- Count failed payments in the last 90 days
-        COUNT(CASE WHEN p.status = 'failed' AND p.payment_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY) THEN 1 END) AS failed_payments_count_90d
+        -- Measures 90 days backwards from the absolute latest payment recorded in the data
+        COUNT(CASE WHEN p.status = 'failed' AND p.payment_date >= DATE_SUB(sa.latest_payment_date, INTERVAL 90 DAY) THEN 1 END) AS failed_payments_count_90d
     FROM subscriptions s
-    INNER JOIN payments p ON s.subscription_id = p.subscription_id
-    GROUP BY s.user_id
-),
-active_subscriptions AS (
-    SELECT 
-        user_id, 
-        plan_type AS current_plan_type,
-        -- Rank to make sure we pick the most recent active subscription if a user has multiple
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY start_date DESC) as rn
-    FROM subscriptions
-    WHERE end_date IS NULL OR end_date > CURDATE()
+    JOIN payments p ON s.subscription_id = p.subscription_id
+    CROSS JOIN system_anchors sa
+    GROUP BY s.user_id, sa.latest_payment_date
 )
 SELECT 
-    u.user_id, 
-    u.username, 
-    u.country, 
-    sub.current_plan_type, 
-    pm.lifetime_completed_amount, 
-    pm.failed_payments_count_90d,
-    -- Apply conditional business rule for risk assessment
+    a.user_id,
+    a.username,
+    a.country,
+    a.current_plan_type,
+    p.lifetime_completed_amount,
+    p.failed_payments_count_90d,
     CASE 
-        WHEN pm.failed_payments_count_90d >= 3 THEN 'churn_risk'
+        WHEN p.failed_payments_count_90d >= 3 THEN 'churn_risk' 
         ELSE 'attention_needed'
     END AS risk_status
-FROM users u
-INNER JOIN active_subscriptions sub ON u.user_id = sub.user_id AND sub.rn = 1
-INNER JOIN payment_metrics pm ON u.user_id = pm.user_id
+FROM active_users a
+JOIN payment_metrics p ON a.user_id = p.user_id
+CROSS JOIN system_anchors sa
 WHERE 
-    -- 1. Account created more than 1 year ago
-    u.created_at < DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
-    -- 2. Exclude users from China, Russia, and Iran
-    AND u.country NOT IN ('CN', 'RU', 'IR')
-    -- 3. At least 2 failed payments in the last 90 days
-    AND pm.failed_payments_count_90d >= 2
-    -- 4. Lifetime completed payments amount is at least 500
-    AND pm.lifetime_completed_amount >= 500.00
-ORDER BY pm.lifetime_completed_amount DESC;
+    a.created_at < DATE_SUB(sa.latest_user_date, INTERVAL 1 YEAR)
+    AND p.failed_payments_count_90d >= 2
+    AND p.lifetime_completed_amount >= 500
+    AND a.country NOT IN ('CN', 'RU', 'IR')
+ORDER BY p.lifetime_completed_amount DESC;
 
+#BATCH 2 OF OVER 270 INTERVIEW WORTHY EXERCISES:
+#EXERCISE 1
 
