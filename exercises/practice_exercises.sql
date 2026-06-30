@@ -3935,4 +3935,64 @@ ORDER BY p.lifetime_completed_amount DESC;
 
 #BATCH 2 OF OVER 270 INTERVIEW WORTHY EXERCISES:
 #EXERCISE 1
+SELECT 
+	c.name,
+    c.email,
+    o.order_id,
+    o.order_date,
+    o.amount
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+WHERE o.amount > 100 AND is_active = 1
+ORDER BY O.order_date DESC;
 
+#EXERCISE 2
+SELECT
+	c.name,
+    c.country,
+    o.order_id,
+    o.amount
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id
+ORDER BY c.name;
+
+#EXERCISE 3
+SELECT 
+	c.name,
+    c.email,
+    c.signup_date,
+    CASE
+		WHEN is_active = 0 THEN 'inactive_customer' 
+        ELSE 'active_never_recorded'
+	END AS customer_status
+FROM customers c
+LEFT JOIN orders o ON c.customer_id = o.customer_id
+WHERE o.customer_id IS NULL;
+    
+#EXERCISE 4
+SELECT 
+	d.dept_name,
+    d.location,
+    e.name,
+    e.salary
+FROM employees e
+RIGHT JOIN departments d
+ON e.department = d.dept_name
+ORDER BY d.dept_name;
+
+#EXERCISE 5
+SELECT
+	o.order_id,
+    o.customer_id,
+    p.product_name,
+    oi.quantity,
+    oi.unit_price
+FROM orders o 
+JOIN order_items oi 
+	ON o.order_id = oi.order_id
+JOIN products p 
+	ON oi.product_id = p.product_id
+WHERE o.status = 'completed' 
+ORDER BY o.order_id, p.product_name;
+
+#EXERCISE 6
