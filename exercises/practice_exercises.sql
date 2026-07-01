@@ -3996,3 +3996,15 @@ WHERE o.status = 'completed'
 ORDER BY o.order_id, p.product_name;
 
 #EXERCISE 6
+SELECT
+	e.name AS employee_name,
+    e.department AS employee_department,
+    e.salary AS employee_salary,
+    m.name AS manager_name,
+    m.salary AS manager_salary
+FROM employees e
+JOIN employees m 
+	ON m.employee_id = e.manager_id
+WHERE e.manager_id IS NOT NULL;
+
+#EXERCISE 7 
