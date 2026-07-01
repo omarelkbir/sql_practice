@@ -4008,3 +4008,36 @@ JOIN employees m
 WHERE e.manager_id IS NOT NULL;
 
 #EXERCISE 7 
+SELECT
+	o.order_id,
+    c.name,
+    c.country,
+    o.amount,
+    CASE 
+		WHEN o.amount > 500 THEN 'High'
+        WHEN o.amount > 100 THEN 'Medium'
+		ELSE 'Low'
+	END AS order_priority
+FROM orders o 
+JOIN customers c 
+	ON o.customer_id = c.customer_id
+WHERE YEAR(o.order_date) = 2023
+ORDER BY amount DESC; 
+
+#EXERCISE 8
+SELECT
+	c.name,
+    c.country,
+    COUNT(*) AS total_orders,
+    ROUND(SUM(o.amount), 2) AS total_spent,
+    ROUND(AVG(o.amount), 2) AS avg_order_amount
+FROM customers c
+JOIN orders o 
+	ON c.customer_id = o.customer_id 
+WHERE o.status IN ('completed', 'pending')
+GROUP BY c.name, c.country
+HAVING COUNT(*) >= 2
+ORDER BY total_spent DESC;
+
+
+    
