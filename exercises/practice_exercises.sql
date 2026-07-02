@@ -4039,5 +4039,168 @@ GROUP BY c.name, c.country
 HAVING COUNT(*) >= 2
 ORDER BY total_spent DESC;
 
+#EXERCISE 9
+WITH date_anchor AS (
+    SELECT MAX(order_date) AS max_date 
+    FROM orders
+)
+SELECT 
+    o.order_id,
+    c.name AS customer_name, 
+    o.order_date, 
+    o.amount,
+    DATEDIFF(da.max_date, o.order_date) AS days_ago
+FROM orders o 
+JOIN customers c ON o.customer_id = c.customer_id
+CROSS JOIN date_anchor da
+WHERE o.order_date >= DATE_SUB(da.max_date, INTERVAL 60 DAY)
+ORDER BY days_ago ASC;
 
+#EXERCISE 10 
+SELECT
+	oi.order_id,
+    p.product_name,
+    p.base_price,
+    oi.unit_price,
+    ROUND((oi.unit_price - p.base_price) * 100 / p.base_price, 2)  AS markup_pct
+FROM order_items oi 
+JOIN products p 
+	ON oi.product_id = p.product_id 
+WHERE oi.unit_price > p.base_price
+ORDER BY markup_pct DESC;
     
+#EXERCISE 11
+SELECT 
+	p.product_name,
+    p.category,
+    COUNT(oi.order_id) AS order_count
+FROM products p 
+JOIN order_items oi 
+	ON p.product_id = oi.product_id
+GROUP BY p.product_id, p.product_name, p.category
+HAVING COUNT(oi.order_id) > (
+	SELECT AVG(total_counts.counts)
+    FROM (
+		SELECT COUNT(order_id) AS counts
+        FROM order_items
+        GROUP BY product_id
+        ) AS total_counts 
+	)
+ORDER BY order_count DESC;
+#SECOND APPROACH
+WITH total_counts AS (
+	SELECT
+		product_id,
+		COUNT(order_id) AS order_count
+    FROM order_items
+    GROUP BY product_id
+),
+total_average AS (
+	SELECT AVG(order_count) AS avg_count
+    FROM total_counts
+)
+SELECT 
+	p.product_name,
+    p.category,
+    tc.order_count,
+    ta.avg_count
+FROM products p 
+JOIN total_counts tc 
+	ON p.product_id = tc.product_id
+CROSS JOIN total_average ta
+WHERE tc.order_count > ta.avg_count
+ORDER BY order_count DESC;
+#THIRD METHOD AND THE ONE REQUIRED BY THE EXERCISE:
+SELECT
+    p.product_name,
+    p.category,
+    COUNT(oi.order_id) AS order_count 
+FROM products p 
+JOIN order_items oi ON p.product_id = oi.product_id 
+JOIN (
+    SELECT AVG(total_counts.counts) AS order_avg
+    FROM (
+        SELECT COUNT(order_id) AS counts
+        FROM order_items
+        GROUP BY product_id
+    ) total_counts
+) benchmark ON 1=1 
+GROUP BY p.product_id, p.product_name, p.category, benchmark.order_avg
+HAVING COUNT(oi.item_id) > benchmark.order_avg
+ORDER BY order_count DESC;
+
+#EXERCISE 12
+SELECT
+	p.product_name,
+    p.category,
+    p.is_discontinued,
+    COALESCE(SUM(oi.quantity), 0) AS total_quantity_ordered
+FROM products p
+LEFT JOIN order_items oi 
+	ON p.product_id = oi.product_id
+GROUP BY p.product_id, p.product_name, p.category, p.is_discontinued
+ORDER BY total_quantity_ordered;
+
+#EXERCISE 13
+SELECT DISTINCT
+	c.name AS customer_name,
+    o.order_id,
+    p.product_name,
+	LEFT(p.description, 50) AS warranty_snippet
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+WHERE c.country = 'UK'
+	AND p.description LIKE '%warranty%'
+ORDER BY customer_name;
+
+#EXERCISE 14
+SELECT 
+	d.location,
+    COUNT(e.employee_id) AS employee_count,
+    ROUND(AVG(e.salary), 2) AS avg_salary,
+    SUM(d.budget) AS total_budget
+FROM departments d
+JOIN employees e
+	ON d.dept_name = e.department
+GROUP BY d.location 
+HAVING COUNT(e.employee_id) >= 5
+ORDER BY avg_salary DESC;
+
+#EXERCISE 15
+WITH customer_base_totals AS (
+    SELECT 
+        c.customer_id,
+        c.name AS customer_name,
+        c.country,
+        SUM(o.amount) AS total_completed_amount,
+        COUNT(DISTINCT p.category) AS distinct_category_count
+    FROM customers c
+    JOIN orders o ON c.customer_id = o.customer_id
+    JOIN order_items oi ON o.order_id = oi.order_id
+    JOIN products p ON oi.product_id = p.product_id
+    WHERE o.status = 'completed'
+    GROUP BY c.customer_id, c.name, c.country
+),
+customer_ranked AS (
+    SELECT 
+        customer_name,
+        country,
+        total_completed_amount,
+        distinct_category_count,
+        RANK() OVER (ORDER BY total_completed_amount DESC) AS rnk
+    FROM customer_base_totals
+)
+SELECT 
+    customer_name,
+    country,
+    total_completed_amount,
+    distinct_category_count,
+    rnk
+FROM customer_ranked
+WHERE rnk <= 3
+ORDER BY total_completed_amount DESC;
+
+
+		
