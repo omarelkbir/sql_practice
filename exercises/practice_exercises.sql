@@ -4202,5 +4202,39 @@ FROM customer_ranked
 WHERE rnk <= 3
 ORDER BY total_completed_amount DESC;
 
+#BATCH 3 OF 270 EXERCISES:
+#EXERCISE 1
+SELECT
+	c.name AS customer_name,
+    o.order_id,
+    o.order_date,
+    oi.product_id,
+    oi.quantity,
+    oi.unit_price
+FROM customers c 
+JOIN orders o ON c.customer_id = o.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id 
+WHERE c.is_active = 1 AND o.status = 'completed'
+ORDER BY order_date; 
 
-		
+#EXERCISE 2
+SELECT c.name, c.country, o.order_id, p.product_name, p.category, oi.unit_price
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+ORDER BY c.name, o.order_id;
+
+#EXERCISE 3
+SELECT 
+	e.name AS employee_name,
+    e.salary AS employee_salary,
+    m.name AS manager_name,
+    m.salary AS manager_salary
+FROM employee_hierarchy e 
+JOIN employee_hierarchy m 
+	ON e.manager_id = m.employee_id
+WHERE m.salary >= 100000
+ORDER BY manager_salary DESC, employee_name;
+
+#EXERCISE 4
