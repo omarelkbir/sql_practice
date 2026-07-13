@@ -4238,3 +4238,18 @@ WHERE m.salary >= 100000
 ORDER BY manager_salary DESC, employee_name;
 
 #EXERCISE 4
+SELECT
+	ep.category,
+    ep.product_name AS expensive_product_name,
+    ep.base_price AS expensive_price,
+    cp.product_name AS cheap_product_name,
+    cp.base_price AS cheap_price
+FROM products ep
+JOIN products cp 
+	ON ep.product_id != cp.product_id 
+    AND ep.category = cp.category
+    AND ep.base_price >= cp.base_price * 2
+ORDER BY ep.category, ep.base_price DESC;
+
+#EXERCISE 5
+

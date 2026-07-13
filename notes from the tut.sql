@@ -238,5 +238,9 @@ Executive dashboard	INNER JOIN	Polished, complete records only
 | `transactions`            | 15      | `account_id` → accounts                              | Flag analysis, amount thresholds               |
 | `q1_sales` / `q2_sales`   | 10 each | —                                                    | Set operators, comparison                      |
 | `users` / `subscriptions` / `payments`  | 15 / 17 / 60 | FK chain: users → subscriptions → payments | Complex multi-table analysis, capstone|
-  				                                                                                      
+  				             
+                  
+#LEFT JOIN additional info                   
+-If you want to discard the left row if a condition isn't met -> Put the filter in the WHERE clause.
+-If you want to keep the left row but turn the right side into NULL if a condition isn't met -> Put the filter in the ON clause.
 
