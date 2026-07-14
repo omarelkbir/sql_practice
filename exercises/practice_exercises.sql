@@ -4252,4 +4252,177 @@ JOIN products cp
 ORDER BY ep.category, ep.base_price DESC;
 
 #EXERCISE 5
+WITH total_inventory AS (
+	SELECT
+		p.product_id,
+		p.product_name,
+        p.category,
+        SUM(i.quantity) AS total_quantity
+	FROM products p
+    LEFT JOIN inventory i 
+		ON p.product_id = i.product_id
+	GROUP BY p.product_id, p.product_name, p.category
+),
+warehouse_rankings AS (
+	SELECT 
+		i.product_id,
+		w.city AS top_warehouse_city,
+        ROW_NUMBER() OVER (PARTITION BY i.product_id ORDER BY i.quantity DESC) AS rnk
+	FROM inventory i
+    JOIN warehouses w
+		ON i.warehouse_id = w.warehouse_id
+)
+SELECT 
+	t.product_name,
+    t.category,
+    COALESCE(t.total_quantity, 0) AS total_quantity,
+    COALESCE(r.top_warehouse_city, 'NULL') AS top_warehouse_city 
+FROM total_inventory t
+LEFT JOIN warehouse_rankings r
+	ON t.product_id = r.product_id
+    AND r.rnk = 1
+ORDER BY t.total_quantity DESC;
+
+#EXERCISE 6
+SELECT 
+    c.name AS customer_name,
+    SUM(o.amount) AS total_spent,
+    ROUND(bm.avg_order_amount, 2) AS avg_order_amount,
+    ROUND(SUM(o.amount) - bm.avg_order_amount, 2) AS above_avg_by
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+JOIN (
+    SELECT AVG(amount) AS avg_order_amount 
+    FROM orders 
+    WHERE status = 'completed'
+) bm ON 1=1 #we do this we we make a benchmark like a cross join, we can just do 1=1
+WHERE o.status = 'completed'
+GROUP BY c.customer_id, c.name, bm.avg_order_amount
+HAVING SUM(o.amount) > bm.avg_order_amount
+ORDER BY total_spent DESC;
+
+#EXERCISE 7:
+SELECT
+	emp.name AS employee_name,
+    mng.name AS manager_name,
+    skp_mng.name AS skip_level_manager_name
+FROM employee_hierarchy emp
+JOIN employee_hierarchy mng 
+	ON emp.manager_id = mng.employee_id
+JOIN employee_hierarchy skp_mng 
+	ON mng.manager_id = skp_mng.employee_id
+ORDER BY skp_mng.name, emp.name;
+		
+#EXERCISE 8:
+SELECT 
+	c.name AS customer_name,
+    c.signup_date,
+    o.order_id,
+    o.order_date,
+    DATEDIFF(o.order_date, c.signup_date) AS days_after_signup
+FROM customers c
+JOIN orders o 
+	ON c.customer_id = o.customer_id 
+    AND o.order_date <= DATE_ADD(c.signup_date, INTERVAL 45 DAY)
+ORDER BY days_after_signup;
+
+#EXERCISE 9
+SELECT 
+	hs.region,
+    hs.sale_id AS higher_sale_id,
+    hs.amount AS higher_amount,
+    ls.sale_id AS lower_sale_id,
+    ls.amount AS lower_amount
+FROM sales hs
+JOIN sales ls
+	ON hs.sale_id != ls.sale_id
+    AND hs.region = ls.region 
+    AND hs.amount >= ls.amount * 2
+ORDER BY hs.region, higher_amount DESC;
+
+#EXERCISE 10
+SELECT *
+FROM (	
+    SELECT 
+		p.product_id,
+		o.order_id,
+		o.customer_id,
+		p.product_name,
+		oi.unit_price,
+		ROW_NUMBER() OVER (
+			PARTITION BY p.product_id ORDER BY oi.unit_price DESC, p.product_id)
+			AS price_rank
+	FROM products p 
+	JOIN order_items oi 
+		ON p.product_id = oi.product_id 
+	JOIN orders o 
+		ON oi.order_id = o.order_id
+	WHERE o.status = 'completed'
+) t WHERE price_rank = 1
+ORDER BY order_id;
+
+#EXERCISE 11
+WITH most_recent_completed_order AS (
+	SELECT 
+		c.name AS customer_name, 
+        MAX(o.order_date) AS most_recent_order_date,
+        COUNT(DISTINCT oi.product_id) AS distinct_product_count
+	FROM customers c 
+    JOIN orders o 
+		ON c.customer_id = o.customer_id 
+        AND o.status = 'completed'
+	JOIN order_items oi 
+		ON o.order_id = oi.order_id 
+	GROUP BY c.name
+)
+SELECT *
+FROM most_recent_completed_order
+ORDER BY most_recent_order_date DESC;
+
+#ALTERNATIVE METHOD WITH CORRELATED SUBQUERY
+SELECT
+	c.name AS customer_name,
+    o.order_date AS most_recent_order_date,
+    COUNT(DISTINCT oi.product_id) AS distinct_product_count
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+WHERE o.status = 'completed'
+	AND o.order_date = (
+		SELECT MAX(o2.order_date) 
+        FROM orders o2
+        WHERE o.customer_id = o2.customer_id 
+        AND o2.status = 'completed'
+	)
+GROUP BY c.customer_id, c.name, o.order_id, o.order_date
+ORDER BY most_recent_order_date DESC;
+
+#EXERCISE 12
+SELECT
+	q1.product_id,
+    q1.amount AS q1_amount,
+    q2.amount AS q2_amount,
+	'q1 only' AS 'source'
+FROM q1_sales q1 
+LEFT JOIN q2_sales q2
+	ON q1.product_id = q2.product_id
+WHERE q2.product_id IS NULL
+UNION ALL 
+SELECT
+	q2.product_id,
+    q1.amount AS q1_amount,
+    q2.amount AS q2_amount,
+    'q2 only' AS 'source'
+FROM q2_sales q2
+LEFT JOIN q1_sales q1
+	ON q2.product_id = q1.product_id
+WHERE q1.product_id IS NULL
+ORDER BY product_id ASC;
+
+#EXERCISE 13
+
+	
+
+
+
 
