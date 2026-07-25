@@ -4420,8 +4420,40 @@ WHERE q1.product_id IS NULL
 ORDER BY product_id ASC;
 
 #EXERCISE 13
+#we can just use a join and filter the cities when joining tables here, very simple
+SELECT
+	e.name AS employee_name,
+    d.dept_name AS department,
+    d.location AS dept_location,
+    w.city AS warehouse_city,
+    w.capacity AS warehouse_capacity
+FROM employees e
+JOIN departments d
+	ON e.department = d.dept_name
+JOIN warehouses w
+	ON d.location = w.city
+ORDER BY w.capacity DESC, e.name;
 
-	
+#OR WITH EXISTS
+#here we can IN or EXISTS.
+SELECT
+	e.name AS employee_name,
+    d.dept_name AS department,
+    d.location AS dept_location,
+    w.city AS warehouse_city,
+    w.capacity AS warehouse_capacity
+FROM employees e
+JOIN departments d
+	ON e.department = d.dept_name
+JOIN warehouses w
+	ON d.location = w.city
+WHERE EXISTS (
+	SELECT 1
+    FROM warehouses w
+    WHERE d.location = w.city)
+ORDER BY w.capacity DESC, e.name;
+
+#EXERCISE 14
 
 
 
