@@ -4453,8 +4453,51 @@ WHERE EXISTS (
     WHERE d.location = w.city)
 ORDER BY w.capacity DESC, e.name;
 
-#EXERCISE 14
 
 
+#EXERCISE 1
+SELECT
+	location AS location_name,
+    'department' AS location_type
+FROM departments
+UNION 
+SELECT
+	city AS location_name,
+    'warehouse' AS location_type
+FROM warehouses 
+ORDER BY location_type, location_name;
 
+#EXERCISE 2
+SELECT
+	email,
+    'customer' AS source_table
+FROM customers
+UNION ALL 
+SELECT
+	email,
+    'student' AS source_table
+FROM students
+ORDER BY source_table, email;
+
+#EXERCISE 3
+SELECT
+	'order' AS event_type,
+    DATE_FORMAT(order_date, '%Y-%m') AS event_month,
+    SUM(amount) AS total_amount,
+    COUNT(*) AS record_count
+FROM orders
+WHERE order_date < '2024-01-01' AND order_date > '2022-12-31'
+GROUP BY event_month
+UNION
+SELECT
+	'sale' AS event_type,
+	DATE_FORMAT(sale_date, '%Y-%m') AS event_month,
+    SUM(amount) AS total_amount,
+    COUNT(*) AS record_count
+FROM sales
+WHERE sale_date < '2024-01-01' AND  sale_date > '2022-12-31'
+GROUP BY event_month
+ORDER BY event_month, event_type; 
+
+#EXERCISE 4
 
