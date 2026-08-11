@@ -4453,7 +4453,12 @@ WHERE EXISTS (
     WHERE d.location = w.city)
 ORDER BY w.capacity DESC, e.name;
 
+#EXERCISE 14
 
+
+
+
+#EXERCISE 15
 
 #EXERCISE 1
 SELECT
@@ -4500,4 +4505,5 @@ GROUP BY event_month
 ORDER BY event_month, event_type; 
 
 #EXERCISE 4
+
 
