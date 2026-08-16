@@ -272,3 +272,119 @@ FROM customers c
 LEFT JOIN orders o 
 	ON c.customer_id = o.customer_id 
     AND o.order_amount > 1000;
+    
+SELECT DISTINCT
+	country
+FROM customers;
+
+SELECT order_id, order_date
+FROM orders
+ORDER BY order_date DESC
+LIMIT 2;
+
+CREATE TABLE persons (
+	id INT NOT NULL,
+    person_name VARCHAR(50) NOT NULL,
+    birth_date DATE,
+    phone VARCHAR(15) NOT NULL,
+    CONSTRAINT pk_persons PRIMARY KEY (id)
+);
+SELECT * FROM persons;
+
+ALTER TABLE persons 
+ADD COLUMN email VARCHAR(50) NOT NULL;
+
+ALTER TABLE persons
+DROP COLUMN phone;
+
+DROP TABLE persons;
+
+INSERT INTO customers (id, first_name, country, score)
+VALUES 
+	(6, 'anna', 'norway', NULL),
+    (7, 'tara', NULL, 100);
+
+CREATE TABLE persons (
+	id INT NOT NULL,
+    person_name VARCHAR (50) NOT NULL,
+    birthdate DATE,
+    phone VARCHAR (15) NOT NULL
+);
+INSERT INTO persons (id, person_name, birthdate, phone)
+SELECT id, first_name, NULL, 'Unknown'
+FROM customers;
+
+SELECT * FROM persons;
+SELECT * FROM customers;
+
+UPDATE customers
+SET score = 0
+WHERE id = 6;
+
+SELECT * FROM customers 
+WHERE id = 6;
+
+UPDATE customers
+SET country = 'Sweden', score = 15
+WHERE id = 7;
+
+DELETE FROM persons
+WHERE id != 7;
+TRUNCATE TABLE persons; #this is faster bc it skips bunch of steps like logs and protocols
+
+SELECT c.id, c.first_name, o.order_id, o.sales
+FROM customers c
+INNER JOIN orders o
+	ON c.id = o.customer_id;
+
+SELECT * FROM orders o
+RIGHT JOIN customers c
+ON o.customer_id = c.id;
+
+#LEFT ANTI JOIN 
+SELECT * FROM customers c
+LEFT JOIN orders o
+	ON c.id = o.customer_id 
+WHERE o.customer_id IS NULL;
+
+#RIGHT ANTI JOIN
+SELECT * FROM customers c
+RIGHT JOIN orders o 
+	ON c.id = o.customer_id
+WHERE c.id IS NULL;
+
+#FULL ANTI JOIN
+SELECT * FROM customers c
+LEFT JOIN orders o 
+	ON c.id = o.customer_id
+WHERE o.customer_id IS NULL
+UNION 
+SELECT * FROM customers c
+RIGHT JOIN orders o
+	ON c.id = o.customer_id
+WHERE c.id IS NULL;
+
+#INNER JOIN WITHOUT USING INNER JOIN KEYWORD
+SELECT * FROM customers c
+LEFT JOIN orders o
+	ON c.id = o.customer_id
+WHERE o.customer_id IS NOT NULL;
+
+#CROSS JOIN
+SELECT * FROM customers 
+CROSS JOIN orders; 
+
+SELECT 
+	o.orderid,
+    CONCAT(c.firstname, c.lastname) AS customer_name,
+    p.product AS product_name,
+    o.sales,
+    p.price,
+    CONCAT(e.firstname, e.lastname) AS salesperson_name
+FROM orders o
+LEFT JOIN customers c 
+	ON o.customerid = c.customerid
+LEFT JOIN products p
+	ON o.productid = p.productid
+LEFT JOIN employees e
+	ON o.salespersonid = e.employeeid;

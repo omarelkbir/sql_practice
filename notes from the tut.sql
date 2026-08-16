@@ -276,3 +276,9 @@ LEFT JOIN orders o
 	ON c.customer_id = o.customer_id 
     AND o.order_amount > 1000;
     
+#ALWAYS USE PARENTHESIS WHEN USING MULTIPLE SET OPERATORS TOGETHER, FOR EXAMPLE TO DO A
+#AN EXCEPT/UNION/EXCEPT. Mysql's parser sees a continuous chain of three set operations 
+#(EXCEPT -> UNION -> EXCEPT). Because UNION and EXCEPT have the same precedence level 
+#in mysql, it tries to evaluate them strictly from left to right.
+#so by seperating them with parenthesis, each can do its job seperately with no conflict
+
