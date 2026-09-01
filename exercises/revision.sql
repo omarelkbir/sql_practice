@@ -388,3 +388,155 @@ LEFT JOIN products p
 	ON o.productid = p.productid
 LEFT JOIN employees e
 	ON o.salespersonid = e.employeeid;
+    
+#UNION
+SELECT 
+	customerid AS id,
+    firstname,
+    lastname
+FROM customers 
+UNION 
+SELECT employeeid, firstname, lastname
+FROM employees;
+
+#workaround
+SELECT 
+	e.employeeid,
+    e.firstname,
+    e.lastname
+FROM employees e
+LEFT JOIN customers c
+	ON e.firstname = c.firstname
+WHERE c.firstname IS NULL;
+
+#modern approach
+SELECT e.firstname, e.lastname FROM employees e
+EXCEPT
+SELECT c.firstname, c.lastname FROM customers c;
+
+#best workaround
+SELECT
+	e.employeeid,
+    e.firstname,
+    e.lastname
+FROM employees e
+WHERE NOT EXISTS (
+	SELECT 1
+    FROM customers c
+    WHERE e.firstname = c.firstname AND e.lastname = c.lastname
+);
+
+SELECT
+	CONCAT(firstname, '-', country) AS name_country,
+    LOWER(firstname) AS lower_name
+FROM customers;
+
+SELECT firstname, LENGTH(firstname) FROM customers
+WHERE firstname != TRIM(firstname);
+
+SELECT 
+	c.customerid,
+    c.firstname,
+    o.orderid
+FROM customers c
+LEFT JOIN orders o 
+	ON c.customerid = o.customerid
+WHERE o.customerid IS NULL;
+
+
+SELECT 
+	category,
+    SUM(sales) AS total_sales
+FROM (
+	SELECT
+		orderid,
+		sales,
+		CASE
+			WHEN sales > 50 THEN 'High'
+			WHEN sales > 20 THEN 'Medium'
+			ELSE 'Low'
+		END AS category
+	FROM orders
+)t
+GROUP BY category
+ORDER BY total_sales DESC;
+
+SELECT 
+	employeeid,
+    firstname,
+    lastname,
+    CASE 
+		WHEN gender = 'F' THEN 'Female'
+        WHEN gender = 'M' THEN 'Male'
+	END AS full_gender
+FROM employees;
+
+SELECT 
+	customerid,
+    firstname,
+    country,
+    CASE country 
+		WHEN 'Germany' THEN 'DE'
+        WHEN 'USA' THEN country
+        ELSE 'N/A'
+	END AS country_code
+FROM customers;
+        
+SELECT
+	customerid,
+    lastname,
+    score,
+    AVG(CASE WHEN score IS NULL THEN 0 ELSE score END) OVER () AS avg_scores
+FROM customers;
+   
+SELECT
+	customerid,
+    SUM(CASE WHEN sales > 30 THEN 1 ELSE 0 END) AS big_order_count,
+	count(*) AS total_orders
+FROM orders
+GROUP BY customerid;
+
+SELECT COUNT(*) FROM orders;
+
+SELECT 
+	productid,
+    orderid,
+    orderdate,
+    sales,
+    orderstatus,
+	SUM(sales) OVER(PARTITION BY productid, orderstatus) AS total_sales
+FROM orders; 
+
+SELECT 
+	orderid,
+    orderdate,
+    sales,
+    RANK() OVER (ORDER BY sales DESC) AS rnk
+FROM orders;
+
+SELECT
+	orderid,
+    productid,
+    orderstatus,
+    sales,
+    SUM(sales) OVER (PARTITION BY orderstatus) AS total_sales
+FROM orders
+WHERE productid IN (101, 102);
+   
+SELECT 
+customerid,
+SUM(sales) AS total_sales,
+ RANK() OVER (ORDER BY SUM(sales) DESC) AS rnk
+FROM orders
+GROUP BY customerid;
+#In MySQL (and standard SQL), window functions are evaluated after the GROUP BY 
+#and aggregation. That means:
+#The result set at the point the window function runs is already grouped.
+#Inside the OVER(...) clause of a window function, you can only reference columns
+#that are either:
+#In the GROUP BY list (because those columns survive the grouping), or
+#Aggregate expressions (like SUM(sales), COUNT(*), AVG(amount), etc.) 
+#whether they appear in the SELECT or not.
+#You cannot reference a non‑grouped, non‑aggregated column inside the window function's
+#ORDER BY or PARTITION BY, because that column no longer exists after grouping.
+

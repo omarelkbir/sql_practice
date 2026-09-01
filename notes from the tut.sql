@@ -282,3 +282,37 @@ LEFT JOIN orders o
 #in mysql, it tries to evaluate them strictly from left to right.
 #so by seperating them with parenthesis, each can do its job seperately with no conflict
 
+__🟡Intermediate Level__
+Filtering Data  
+SQL Joins (Basics)
+SQL Joins (Advanced)
+Set Operators  
+SQL Functions  
+String Functions  
+Numeric Functions  
+Date and Time Functions  
+NULL Functions
+Case Statement
+Aggregate Functions  
+Window Functions Basics  
+Window Aggregate  
+Window Ranking  
+Window Value  
+
+__🔴Advanced Level__
+Advanced SQL Techniques  
+Subqueries  
+Common Table Expressions (CTE)  
+Views  
+CTAS and Temp Tables  
+
+#In MySQL (and standard SQL), window functions are evaluated after the GROUP BY 
+#and aggregation. That means:
+#The result set at the point the window function runs is already grouped.
+#Inside the OVER(...) clause of a window function, you can only reference columns
+#that are either:
+#In the GROUP BY list (because those columns survive the grouping), or
+#Aggregate expressions (like SUM(sales), COUNT(*), AVG(amount), etc.) 
+#whether they appear in the SELECT or not.
+#You cannot reference a non‑grouped, non‑aggregated column inside the window function's
+#ORDER BY or PARTITION BY, because that column no longer exists after grouping.
