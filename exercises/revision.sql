@@ -526,7 +526,7 @@ WHERE productid IN (101, 102);
 SELECT 
 customerid,
 SUM(sales) AS total_sales,
- RANK() OVER (ORDER BY SUM(sales) DESC) AS rnk
+RANK() OVER (ORDER BY SUM(sales) DESC) AS rnk
 FROM orders
 GROUP BY customerid;
 #In MySQL (and standard SQL), window functions are evaluated after the GROUP BY 
@@ -539,4 +539,88 @@ GROUP BY customerid;
 #whether they appear in the SELECT or not.
 #You cannot reference a non‑grouped, non‑aggregated column inside the window function's
 #ORDER BY or PARTITION BY, because that column no longer exists after grouping.
+
+SELECT 
+	customerid,
+	orderid,
+    orderdate,
+    COUNT(*) OVER () AS order_count,
+    COUNT(*) OVER (PARTITION BY customerid) AS orders_per_customer
+FROM orders;
+
+SELECT
+	*,
+	COUNT(*) OVER () AS customer_count,
+    COUNT(score) OVER () AS score_count
+FROM customers;
+
+SELECT
+	orderid,
+    orderdate,
+    sales,
+    productid,
+    SUM(sales) OVER () AS total_sales,
+    SUM(sales) OVER (PARTITION BY productid) AS total_salesbyproduct
+FROM orders;
+
+SELECT 
+	*,
+    ROUND((total_productsales / total_sales) * 100, 2) AS perct_contribution
+FROM (
+	SELECT
+		productid,
+		sales,
+		SUM(sales) OVER () AS total_sales,
+		SUM(sales) OVER (PARTITION BY productid) AS total_productsales
+	FROM orders
+)t;  
+
+SELECT
+	orderid,
+    orderdate,
+    sales,
+    productid,
+    AVG(sales) OVER () AS avg_sales,
+    AVG(sales) OVER (PARTITION BY productid) AS avg_salesByProduct
+FROM orders;
+    
+SELECT
+	customerid,
+    lastname,
+    score,
+    AVG(COALESCE(score, 0)) OVER () AS avg_score
+FROM customers;
+
+SELECT
+	*
+FROM (
+	SELECT
+		orderid,
+		sales,
+		productid,
+		AVG(sales) OVER() AS avg_sales
+	FROM orders
+)t WHERE sales > avg_sales;
+
+SELECT
+	orderid,
+    orderdate,
+    sales,
+    productid,
+    MIN(sales) OVER () AS lowest_sales,
+    MAX(sales) OVER () AS highest_sales,
+    MIN(sales) OVER (PARTITION BY productid) AS lowersalesByproduct,
+    MAX(sales) OVER (PARTITION BY productid) AS highestsalesByproduct,
+    sales - MIN(sales) OVER () AS deviationFrom_minimum,
+    MAX(sales) OVER () - sales AS deviationFrom_maximum
+FROM orders;
+
+SELECT
+	*
+FROM (
+	SELECT
+		*,
+		MAX(salary) OVER() AS highest_salary
+	FROM employees
+)t WHERE salary = highest_salary;
 
