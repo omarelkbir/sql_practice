@@ -624,3 +624,4 @@ FROM (
 	FROM employees
 )t WHERE salary = highest_salary;
 
+

@@ -4504,6 +4504,59 @@ WHERE sale_date < '2024-01-01' AND  sale_date > '2022-12-31'
 GROUP BY event_month
 ORDER BY event_month, event_type; 
 
-#EXERCISE 4
+#STARTING OVER BETTER
+#1
+SELECT *
+FROM customers
+WHERE country = 'USA';
 
+#2
+SELECT * FROM transactions
+WHERE amount > 500;
+
+#3
+SELECT * FROM customers
+WHERE is_active = 1 AND tier = 'gold';
+
+#4
+SELECT * FROM products
+WHERE category IN('Electronics', 'Furniture');
+#5
+SELECT * FROM customers
+WHERE country IN('UK', 'Germany', 'Spain');
+#6
+SELECT * FROM transactions
+WHERE amount BETWEEN 2000 AND 5000;
+#7
+SELECT * FROM products
+WHERE product_name LIKE 'L%';
+#8
+SELECT * FROM employees
+WHERE department != 'Engineering';
+#9
+SELECT * FROM customers
+WHERE email IS NULL;
+#10
+SELECT * FROM customers
+WHERE phone IS NOT NULL;
+#11
+SELECT * FROM orders
+WHERE status = 'completed' AND shipping_country IN('USA', 'UK');
+#12
+SELECT * FROM products
+WHERE is_discontinued = 0 AND description LIKE '%YEAR%warranty%';
+#13
+SELECT * FROM orders
+WHERE status IN('cancelled', 'refunded') AND MONTH(order_date) > 6
+ORDER BY order_date DESC;
+#14
+SELECT * FROM customers
+WHERE is_active = 1 AND (email IS NULL OR phone IS NULL) AND tier != 'gold'
+ORDER BY signup_date;
+#15
+SELECT * FROM employees
+WHERE is_full_time = 1 AND salary NOT BETWEEN 90000 AND 140000 
+	AND name NOT LIKE '% _%'
+ORDER BY salary DESC
+LIMIT 10;
 
