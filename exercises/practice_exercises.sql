@@ -4506,18 +4506,14 @@ ORDER BY event_month, event_type;
 
 #STARTING OVER BETTER
 #1
-SELECT *
-FROM customers
+SELECT * FROM customers
 WHERE country = 'USA';
-
 #2
 SELECT * FROM transactions
 WHERE amount > 500;
-
 #3
 SELECT * FROM customers
 WHERE is_active = 1 AND tier = 'gold';
-
 #4
 SELECT * FROM products
 WHERE category IN('Electronics', 'Furniture');
@@ -4560,3 +4556,137 @@ WHERE is_full_time = 1 AND salary NOT BETWEEN 90000 AND 140000
 ORDER BY salary DESC
 LIMIT 10;
 
+#CONCEPT 2
+#1
+SELECT 
+	c.name,
+    o.amount,
+    o.order_date
+FROM customers c
+INNER JOIN orders o 
+	ON c.customer_id = o.customer_id;
+#2
+SELECT 
+	c.name,
+    o.amount,
+    o.order_date
+FROM customers c
+LEFT JOIN orders o
+	ON c.customer_id = o.customer_id;
+#3
+SELECT 
+	o.order_id,
+    oi.product_id,
+    oi.quantity,
+    oi.unit_price
+FROM orders o
+LEFT JOIN order_items oi
+	ON o.order_id = oi.order_id;
+#4
+SELECT 
+	oi.order_id,
+    oi.product_id,
+    p.is_discontinued
+FROM order_items oi
+INNER JOIN products p
+	ON oi.product_id = p.product_id
+    AND p.is_discontinued = 1;
+#5
+SELECT c.name, c.country, o.order_id, o.order_date, o.amount
+FROM customers c
+LEFT JOIN orders o
+	ON c.customer_id = o.customer_id
+WHERE c.country = 'UK';
+#6
+SELECT
+	p.product_id,
+    i.quantity,
+    i.warehouse_id
+FROM products p
+INNER JOIN inventory i 
+	ON p.product_id = i.product_id
+WHERE i.quantity != 0;
+#7
+SELECT
+	e.employee_id,
+    e.name,
+    e.manager_id,
+    m.name
+FROM employees e
+INNER JOIN employees m
+	ON e.manager_id = m.employee_id;
+
+#8
+SELECT
+	d.dept_name,
+    COUNT(e.employee_id) AS head_count
+FROM departments d
+LEFT JOIN employees e
+	ON d.dept_name = e.department
+GROUP BY d.dept_name;
+#9
+SELECT
+	a.account_id,
+    t.transaction_type,
+    t.transaction_date,
+    t.is_flagged
+FROM accounts a
+LEFT JOIN transactions t
+	ON a.account_id = t.account_id
+WHERE t.is_flagged = 1;
+#10
+SELECT
+	o.order_id,
+    c.name,
+    c.tier,
+    o.shipping_country
+FROM orders o
+LEFT JOIN customers c
+	ON o.customer_id = c.customer_id
+WHERE o.shipping_country != c.country;
+#11
+SELECT
+	p.product_id,
+    SUM(i.quantity) AS total_inventory,
+    CASE
+		WHEN SUM(i.quantity) = 0 THEN 'No Inventory'
+        ELSE 'Stocked'
+	END AS state
+FROM products p
+LEFT JOIN inventory i
+	ON p.product_id = i.product_id
+GROUP BY p.product_id;
+#12
+SELECT 
+	s.student_id,
+    s.name,
+    c.course_name,
+    erm.completion_date,
+    erm.grade
+FROM students s
+LEFT JOIN enrollments erm
+	ON s.student_id = erm.student_id
+LEFT JOIN courses c
+	ON erm.course_id = c.course_id;
+#13
+SELECT
+	o.order_id,
+    c.name AS customer_name,
+    p.product_id,
+    p.product_name,
+    oi.quantity
+FROM customers c
+JOIN orders o
+	ON c.customer_id = o.customer_id
+JOIN order_items oi
+	ON o.order_id = oi.order_id
+JOIN products p
+	ON oi.product_id = p.product_id;
+#14
+SELECT
+	s.session_id,
+    u.user_id
+#15
+SELECT
+	a.account_id,
+    MAX(t.transaction_date) AS most_recent_transaction
