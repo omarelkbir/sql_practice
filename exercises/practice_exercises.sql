@@ -4564,7 +4564,8 @@ SELECT
     o.order_date
 FROM customers c
 INNER JOIN orders o 
-	ON c.customer_id = o.customer_id;
+	ON c.customer_id = o.customer_id
+WHERE o.status = 'completed';
 #2
 SELECT 
 	c.name,
@@ -4604,8 +4605,7 @@ SELECT
     i.warehouse_id
 FROM products p
 INNER JOIN inventory i 
-	ON p.product_id = i.product_id
-WHERE i.quantity != 0;
+	ON p.product_id = i.product_id;
 #7
 SELECT
 	e.employee_id,
@@ -4683,10 +4683,239 @@ JOIN order_items oi
 JOIN products p
 	ON oi.product_id = p.product_id;
 #14
-SELECT
-	s.session_id,
-    u.user_id
+SELECT 
+    v.session_id,
+    v.user_id,
+    c.name,
+    c.tier
+FROM website_visits v
+LEFT JOIN customers c
+    ON v.user_id = c.customer_id;
 #15
+SELECT 
+    a.account_id,
+    a.account_holder,
+    a.account_type,
+    t1.description,
+    t1.transaction_date AS most_recent_transaction
+FROM accounts a
+LEFT JOIN transactions t1
+    ON a.account_id = t1.account_id
+LEFT JOIN transactions t2
+    ON t1.account_id = t2.account_id
+    AND t2.transaction_date > t1.transaction_date
+WHERE t2.transaction_id IS NULL;
+
+#SQL JOINS ADVANCED 
+#1
+SELECT 
+	e.name AS employee_name,
+    m2.name AS higher_manager_name
+FROM employee_hierarchy e 
+INNER JOIN employee_hierarchy m1
+	ON e.manager_id = m1.employee_id
+INNER JOIN employee_hierarchy m2
+	ON m1.manager_id = m2.employee_id;
+#2
 SELECT
-	a.account_id,
-    MAX(t.transaction_date) AS most_recent_transaction
+	e.name AS employee_name,
+    m1.name AS manager_name,
+    m2.name AS higher_manager_name,
+    m3.name AS top_manager_name
+FROM employee_hierarchy e
+INNER JOIN employee_hierarchy m1
+	ON e.manager_id = m1.employee_id
+INNER JOIN employee_hierarchy m2
+	ON m1.manager_id = m2.employee_id
+INNER JOIN employee_hierarchy m3
+	ON m2.manager_id = m3.employee_id;
+#3
+SELECT *
+FROM orders o
+INNER JOIN order_items oi
+	ON o.order_id = oi.order_id
+INNER JOIN products p
+	ON oi.product_id = p.product_id;
+#4
+SELECT 
+	o.order_id,
+    o1.order_id,
+    o.customer_id,
+    o1.customer_id,
+    o.order_date,
+    o1.order_date
+FROM orders o
+INNER JOIN orders o1
+	ON o.customer_id = o1.customer_id 
+    AND o.order_date < o1.order_date
+ORDER BY o.customer_id;
+#5
+SELECT 
+	o.order_id,
+    o1.order_id,
+    o.customer_id,
+    o.order_date,
+    o1.order_date,
+    o.amount,
+    o1.amount
+FROM orders o
+INNER JOIN orders o1
+	ON o.customer_id = o1.customer_id 
+    AND o.order_date < o1.order_date
+WHERE o.amount < o1.amount
+ORDER BY o.order_id, o1.order_id;
+#6
+#it already has no both ways reoccurance so didnt bother writing code for it, but it would
+#look like this ON o.order_id < o1.order_id, right?
+
+#starting the batches over this time in a clean consistent learning and building.
+#FILTERING BATCH
+#1
+SELECT * FROM customers
+WHERE country = 'USA';
+#2
+SELECT * FROM orders
+WHERE amount > 500;
+#3
+SELECT * FROM customers
+WHERE is_active = 1;
+#4
+SELECT * FROM customers
+WHERE country IN ('UK', 'Canada');
+#5
+SELECT * FROM orders
+WHERE order_date >= '2023-03-01' AND order_date <= '2023-06-30';
+#6
+SELECT * FROM customers
+WHERE email IS NULL;
+#7
+SELECT * FROM customers
+WHERE email IS NOT NULL AND (tier = 'gold' OR tier = 'platinum');
+#8
+SELECT * FROM products 
+WHERE product_name LIKE 'E%';
+#9 (review)
+SELECT * FROM products
+WHERE description LIKE '%warranty%' AND description NOT LIKE '%no_warranty%';
+#10
+SELECT * FROM employees
+WHERE salary BETWEEN 90000 AND 130000
+	  AND is_full_time = 1 
+      AND department IN ('Engineering', 'Finance');
+#11 (review) 
+SELECT * FROM employees
+WHERE (manager_id IS NULL OR is_full_time = 0)
+	  AND department != 'Engineering';
+#12
+SELECT * FROM orders
+WHERE order_date >= '2023-10-01'
+	  AND (status IN ('cancelled', 'refunded') OR amount > 1000);
+#13
+SELECT * FROM customers
+WHERE name LIKE '_a%';
+#14 (review)
+SELECT * FROM logs
+WHERE service_name != 'payment-service'
+	AND (log_message LIKE 'ERR-2%' OR log_message LIKE 'ERR-5%');
+#15 (review)
+SELECT * FROM customers
+WHERE is_active = 1 AND YEAR(signup_date) = 2023
+	AND country NOT IN ('USA', 'UK', 'Canada') 
+    AND tier != 'bronze' AND email IS NOT NULL AND phone IS NOT NULL;
+
+#JOINS (BASICS)
+#1
+SELECT o.order_id, c.name FROM customers c
+INNER JOIN orders o
+	ON c.customer_id = o.customer_id;
+#2 (review)
+SELECT oi.order_id, p.product_name, oi.quantity
+FROM order_items oi
+INNER JOIN products p
+	ON oi.product_id = p.product_id;
+#3
+SELECT c.name, o.order_id, o.order_date FROM customers c
+LEFT JOIN orders o
+	ON c.customer_id = o.customer_id;
+#4
+SELECT e.name, e.department, d.location FROM employees e
+INNER JOIN departments d
+	ON e.department = d.dept_name;
+#5
+SELECT c.name, c.country, o.order_id, o.status, o.amount
+FROM customers c
+INNER JOIN orders o
+	ON c.customer_id = o.customer_id
+WHERE o.status = 'completed' AND o.amount > 200;
+#6
+SELECT u.username, s.plan_type FROM users u
+LEFT JOIN subscriptions s 
+	ON u.user_id = s.user_id;
+#7
+SELECT p.product_id, p.product_name, oi.order_id
+FROM products p 
+LEFT JOIN order_items oi 
+	ON p.product_id = oi.product_id;
+#8
+SELECT t.transaction_id, t.is_flagged, t.account_id, a.account_holder, a.account_type
+FROM transactions t
+INNER JOIN accounts a
+	ON t.account_id = a.account_id
+WHERE t.is_flagged = 1;
+#9
+SELECT s.name, c.course_name, e.completion_date
+FROM students s
+INNER JOIN enrollments e 
+	ON s.student_id = e.student_id
+INNER JOIN courses c
+	ON e.course_id = c.course_id
+WHERE e.completion_date IS NOT NULL;
+#10
+SELECT c.name, p.product_name, oi.quantity, oi.unit_price
+FROM customers c
+INNER JOIN orders o ON c.customer_id = o.customer_id
+INNER JOIN order_items oi ON o.order_id = oi.order_id
+INNER JOIN products p ON oi.product_id = p.product_id;
+#11
+SELECT p.payment_id, p.status, u.username
+FROM payments p
+INNER JOIN subscriptions s ON p.subscription_id = s.subscription_id
+INNER JOIN users u ON s.user_id = u.user_id
+WHERE p.status = 'failed';
+#12
+SELECT c.name, o.order_id, o.status
+FROM customers c
+LEFT JOIN orders o 
+	ON c.customer_id = o.customer_id
+    AND o.status = 'completed'
+ORDER BY o.status DESC;
+#13
+SELECT i.inventory_id, p.product_name, w.city, i.quantity
+FROM products p
+INNER JOIN inventory i
+	ON p.product_id = i.product_id
+INNER JOIN warehouses w
+	ON i.warehouse_id = w.warehouse_id
+WHERE i.quantity = 0;
+#14 (review) 
+SELECT s.name, c.course_name, c.credits
+FROM students s
+INNER JOIN enrollments e
+	ON s.student_id = e.student_id
+INNER JOIN courses c
+	ON e.course_id = c.course_id
+    AND s.major = c.department;
+#15 (review) 
+SELECT c.name, o.order_id, o.order_date, p.product_name
+FROM customers c
+LEFT JOIN orders o 
+	ON c.customer_id = o.customer_id
+    AND o.status != 'cancelled'
+LEFT JOIN order_items oi
+	ON o.order_id = oi.order_id 
+LEFT JOIN products p
+	ON oi.product_id = p.product_id
+WHERE c.country != 'USA';
+
+#JOINS (ADVANCED) 
+#1

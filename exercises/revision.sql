@@ -625,3 +625,18 @@ FROM (
 )t WHERE salary = highest_salary;
 
 
+#starting the tutorial over with some tasks then batches exercises
+#Filtering 
+SELECT * FROM customers 
+WHERE score BETWEEN 100 AND 500;
+
+SELECT * FROM customers
+WHERE country IN ('Germany', 'USA');
+
+SELECT * FROM customers
+WHERE first_name LIKE '%n';
+
+SELECT * FROM customers 
+WHERE first_name LIKE '__r%';
+
+
