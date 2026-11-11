@@ -639,4 +639,45 @@ WHERE first_name LIKE '%n';
 SELECT * FROM customers 
 WHERE first_name LIKE '__r%';
 
+SELECT * FROM customers c
+RIGHT JOIN orders o
+	ON c.id = o.customer_id;
 
+SELECT * FROM orders o
+LEFT JOIN customers c
+	ON o.customer_id = c.id;
+
+SELECT * FROM customers c
+LEFT JOIN orders o
+	ON c.id = o.customer_id
+	WHERE o.customer_id IS NULL;
+    
+SELECT * FROM customers c
+RIGHT JOIN orders o
+	ON c.id = o.customer_id
+WHERE c.id IS NULL;
+
+SELECT * FROM customers c
+LEFT JOIN orders o
+	ON c.id = o.customer_id
+WHERE o.customer_id IS NULL
+UNION 
+SELECT * FROM customers c
+RIGHT JOIN orders o
+	ON c.id = o.customer_id
+WHERE c.id IS NULL;
+
+SELECT * FROM customers c
+LEFT JOIN orders o
+	ON c.id = o.customer_id
+WHERE o.customer_id IS NOT NULL;
+
+SELECT * FROM customers
+CROSS JOIN orders;
+
+SELECT o.orderid, CONCAT(c.firstname,' ', c.lastname) AS customer_name,
+p.product, o.sales, p.price, CONCAT(e.firstname,' ', e.lastname) AS emp_name
+FROM orders o
+LEFT JOIN customers c ON o.customerid = c.customerid
+LEFT JOIN products p ON o.productid = p.productid
+LEFT JOIN employees e ON o.salespersonid = e.employeeid;

@@ -4919,3 +4919,109 @@ WHERE c.country != 'USA';
 
 #JOINS (ADVANCED) 
 #1
+SELECT e.employee_id, e.name, m.employee_id, m.name
+FROM employees e
+LEFT JOIN employees m
+	ON e.manager_id = m.employee_id;
+#2
+SELECT c.name, o.order_id FROM customers c
+LEFT JOIN orders o
+	ON c.customer_id = o.customer_id
+WHERE o.customer_id IS NULL;
+#3
+SELECT p.product_id, p.product_name, p.category, o.order_id
+FROM products p
+LEFT JOIN order_items oi ON p.product_id = oi.product_id
+LEFT JOIN orders o ON oi.order_id = o.order_id
+WHERE o.order_id IS NULL;
+#4 (review) 
+SELECT 
+	e.employee_id,
+	e.name,
+    m.employee_id AS manager_id,
+    m.name AS manager_name,
+    mm.employee_id AS top_manager_id,
+    mm.name AS top_manager_name
+FROM employees e 
+LEFT JOIN employees m ON e.manager_id = m.employee_id
+LEFT JOIN employees mm ON m.manager_id = mm.employee_id;
+#5 (review)
+SELECT u.username, s.plan_type, p.payment_date
+FROM users u
+LEFT JOIN subscriptions s 
+	ON u.user_id = s.user_id
+LEFT JOIN payments p
+	ON s.subscription_id = p.subscription_id
+WHERE payment_date IS NULL;
+#6 (review) 
+SELECT o.customer_id, o.order_id, o.order_date, o1.customer_id, o1.order_id, o1.order_date
+FROM orders o 
+LEFT JOIN orders o1 
+	ON o.customer_id = o1.customer_id
+    AND o.order_date < o1.order_date
+ORDER BY o.customer_id, o.order_date, o1.order_date;
+#7 (review) 
+SELECT 
+	e.employee_id AS emp_id,
+	e.name AS emp_name,
+    e1.employee_id AS emp_id1,
+    e1.name AS emp_name1,
+    e.department
+FROM employees e
+LEFT JOIN employees e1
+	ON e.department = e1.department 
+    AND e.employee_id < e1.employee_id;
+#8 (review)
+SELECT 
+	s1.name AS student1,
+    s2.name AS student2,
+    c.course_name
+FROM enrollments e1
+JOIN enrollments e2
+	ON e1.course_id = e2.course_id
+    AND e1.student_id < e2.student_id
+JOIN students s1 ON e1.student_id = s1.student_id
+JOIN students s2 ON e2.student_id = s2.student_id
+JOIN courses c ON e1.course_id = c.course_id;
+#9
+SELECT
+	w1.city,
+    w2.city,
+    p.product_name
+FROM inventory i1
+INNER JOIN inventory i2
+	ON i1.product_id = i2.product_id
+    AND i1.warehouse_id < i2.warehouse_id
+INNER JOIN warehouses w1
+	ON i1.warehouse_id = w1.warehouse_id
+INNER JOIN warehouses w2
+	ON i2.warehouse_id = w2.warehouse_id
+INNER JOIN products p
+	ON i1.product_id = p.product_id;
+#10 (review)
+SELECT 
+	wv.visit_id,
+    e.event_name
+FROM website_visits wv
+LEFT JOIN events e
+	ON wv.visit_time BETWEEN e.start_time AND e.end_time
+ORDER BY e.event_name DESC;
+#11
+SELECT
+	e.employee_id,
+    e.name AS emp_name,
+    m.employee_id AS manager1_id,
+    m.name AS manager_name1,
+    mm.employee_id AS manager2_id,
+    mm.name AS manager_name2,
+    mmm.employee_id AS manager3_id,
+    mmm.name AS manager_name3,
+    e.level
+FROM employee_hierarchy e
+LEFT JOIN employee_hierarchy m
+	ON e.manager_id = m.employee_id
+LEFT JOIN employee_hierarchy mm
+	ON m.manager_id = mm.employee_id
+LEFT JOIN employee_hierarchy mmm
+	ON mm.manager_id = mmm.employee_id
+WHERE e.level = 5;
