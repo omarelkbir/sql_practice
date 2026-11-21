@@ -4948,15 +4948,15 @@ LEFT JOIN employees mm ON m.manager_id = mm.employee_id;
 #5 (review)
 SELECT u.username, s.plan_type, p.payment_date
 FROM users u
-LEFT JOIN subscriptions s 
+INNER JOIN subscriptions s 
 	ON u.user_id = s.user_id
 LEFT JOIN payments p
 	ON s.subscription_id = p.subscription_id
-WHERE payment_date IS NULL;
+WHERE payment_id IS NULL;
 #6 (review) 
 SELECT o.customer_id, o.order_id, o.order_date, o1.customer_id, o1.order_id, o1.order_date
 FROM orders o 
-LEFT JOIN orders o1 
+INNER JOIN orders o1 
 	ON o.customer_id = o1.customer_id
     AND o.order_date < o1.order_date
 ORDER BY o.customer_id, o.order_date, o1.order_date;
@@ -4968,7 +4968,7 @@ SELECT
     e1.name AS emp_name1,
     e.department
 FROM employees e
-LEFT JOIN employees e1
+INNER JOIN employees e1
 	ON e.department = e1.department 
     AND e.employee_id < e1.employee_id;
 #8 (review)
@@ -5025,3 +5025,179 @@ LEFT JOIN employee_hierarchy mm
 LEFT JOIN employee_hierarchy mmm
 	ON mm.manager_id = mmm.employee_id
 WHERE e.level = 5;
+#12 (review)
+SELECT p.product_name, w.city
+FROM products p
+CROSS JOIN warehouses w
+LEFT JOIN inventory i
+	ON p.product_id = i.product_id
+    AND i.warehouse_id = w.warehouse_id
+WHERE i.quantity = 0;
+
+#SET OPERATORS
+#1
+SELECT product_id
+FROM q1_sales
+UNION 
+SELECT product_id
+FROM q2_sales;
+#2
+SELECT product_id
+FROM q1_sales
+UNION ALL
+SELECT product_id
+FROM q2_sales;
+#3
+SELECT q1.product_id
+FROM q1_sales q1
+INNER JOIN q2_sales q2
+	ON q1.product_id = q2.product_id;
+#OR
+SELECT product_id FROM q1_sales
+INTERSECT 
+SELECT product_id FROM q2_sales;
+#4
+SELECT q1.product_id FROM q1_sales q1
+LEFT JOIN q2_sales q2
+	ON q1.product_id = q2.product_id
+WHERE q2.product_id IS NULL;
+#OR
+SELECT product_id FROM q1_sales
+EXCEPT
+SELECT product_id FROM q2_sales;
+#5
+SELECT amount FROM q1_sales
+UNION ALL
+SELECT amount FROM q2_sales
+ORDER BY amount DESC;
+#6
+SELECT product_id, amount, 'Q1' AS Quarter
+FROM q1_sales
+WHERE amount > 5000
+UNION ALL 
+SELECT product_id, amount, 'Q2'
+FROM q2_sales
+WHERE amount > 5000
+ORDER BY amount DESC;
+#7
+SELECT q1.product_id, p.product_name
+FROM q1_sales q1 
+INNER JOIN products p 
+	ON q1.product_id = p.product_id
+INTERSECT
+SELECT q2.product_id, p.product_name
+FROM q2_sales q2
+INNER JOIN products p
+	ON q2.product_id = p.product_id
+ORDER BY product_name; #we removed p. here, it didnt work with it, forgot why 
+#another 2 approaches using joins and also where...in.
+SELECT DISTINCT p.product_name
+FROM products p
+INNER JOIN q1_sales q1 ON p.product_id = q1.product_id
+INNER JOIN q2_sales q2 ON p.product_id = q2.product_id
+ORDER BY p.product_name;
+#
+SELECT p.product_name FROM products p
+WHERE p.product_id IN (SELECT product_id FROM q1_sales)
+	AND p.product_id IN (SELECT product_id FROM q2_sales)
+ORDER BY p.product_name;
+#8
+SELECT name AS name, 'Customer' AS label
+FROM customers
+WHERE is_active = 1
+UNION ALL
+SELECT name, 'Employee' 
+FROM employees
+WHERE is_full_time = 1;
+#9
+SELECT country FROM customers
+UNION 
+SELECT country FROM warehouses
+ORDER BY country;
+#10
+SELECT country FROM customers
+WHERE tier != 'gold'
+EXCEPT 
+SELECT country FROM warehouses;
+#OR
+SELECT country FROM customers
+WHERE tier != 'gold'
+	AND country NOT IN (SELECT country FROM warehouses);
+#OR
+SELECT DISTINCT c.country, w.country FROM customers c
+LEFT JOIN warehouses w
+	ON c.country = w.country
+WHERE c.tier != 'gold' 
+	AND w.country IS NULL;
+#11 starting with non set approaches first to make sense of it
+SELECT p.product_id, p.product_name
+FROM products p
+INNER JOIN q1_sales q1 ON p.product_id = q1.product_id
+INNER JOIN q2_sales q2 ON p.product_id = q2.product_id
+INNER JOIN order_items oi ON p.product_id = oi.product_id
+INNER JOIN orders o
+	ON oi.order_id = o.order_id 
+	AND o.status IN ('cancelled', 'refunded')
+ORDER BY p.product_name;
+#OR
+(SELECT p.product_name FROM products p
+INNER JOIN q1_sales q1 ON p.product_id = q1.product_id
+UNION 
+SELECT p.product_name FROM products p
+INNER JOIN q2_sales q2 ON p.product_id = q2.product_id)
+INTERSECT
+SELECT p.product_name FROM products p
+INNER JOIN order_items oi ON p.product_id = oi.product_id
+INNER JOIN orders o ON oi.order_id = o.order_id
+	AND o.status IN ('cancelled', 'refunded')
+ORDER BY product_name;
+#12
+SELECT s.name FROM students s
+INNER JOIN enrollments e
+	ON s.student_id = e.student_id 
+	AND e.completion_date IS NOT NULL
+INTERSECT
+SELECT s.name FROM students s
+INNER JOIN enrollments e
+	ON s.student_id = e.student_id
+	AND e.completion_date IS NULL;
+#13
+SELECT s.name FROM students s
+INNER JOIN enrollments e
+	ON s.student_id = e.student_id 
+	AND e.completion_date IS NOT NULL
+EXCEPT
+SELECT s.name FROM students s
+INNER JOIN enrollments e
+	ON s.student_id = e.student_id
+	AND e.completion_date IS NULL;
+#14
+SELECT account_holder FROM accounts
+WHERE account_type = 'checking'
+UNION 
+SELECT account_holder FROM accounts
+WHERE account_type = 'credit'
+EXCEPT
+SELECT account_holder FROM accounts
+WHERE account_type = 'savings';
+#SHORTER VERSION
+SELECT account_holder FROM accounts
+WHERE account_type IN ('checking', 'credit')
+EXCEPT 
+SELECT account_holder FROM accounts
+WHERE account_type = 'savings';
+#15
+(SELECT p.product_name, 'Q1 only' AS label FROM q1_sales q1
+INNER JOIN products p ON p.product_id = q1.product_id
+EXCEPT 
+SELECT p.product_name, 'Q1' FROM q2_sales q2
+INNER JOIN products p ON p.product_id = q2.product_id)
+UNION 
+(SELECT p.product_name, 'Q2 only' AS label  FROM q2_sales q2
+INNER JOIN products p ON p.product_id = q2.product_id
+EXCEPT 
+SELECT p.product_name, 'Q2' FROM q1_sales q1
+INNER JOIN products p ON p.product_id = q1.product_id)
+ORDER BY product_name;
+
+

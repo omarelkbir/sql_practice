@@ -681,3 +681,19 @@ FROM orders o
 LEFT JOIN customers c ON o.customerid = c.customerid
 LEFT JOIN products p ON o.productid = p.productid
 LEFT JOIN employees e ON o.salespersonid = e.employeeid;
+
+SELECT customerid AS id, firstname, lastname, 'Customer'
+FROM customers
+UNION 
+SELECT employeeid, firstname, lastname, 'Employee'
+FROM employees;
+
+SELECT * FROM customers c
+LEFT JOIN employees e 
+	ON c.firstname = e.firstname AND c.lastname = e.lastname
+WHERE e.firstname IS NULL;
+#OR
+SELECT firstname, lastname FROM customers
+EXCEPT 
+SELECT firstname, lastname FROM employees;
+
